@@ -223,6 +223,9 @@
   .tag{font-size:12px;font-weight:600;padding:2.5px 9px;border-radius:999px;background:var(--surface2);color:var(--ink2);}
   .tag.subj{color:#fff;}
   .q-stem{font-size:17.5px;line-height:1.65;font-weight:550;white-space:pre-wrap;word-break:break-word;}
+  .q-img{margin-top:12px;border:1px solid #eee;border-radius:10px;padding:10px;background:#fff;overflow:hidden;}
+  .q-img svg{width:100%;max-width:420px;height:auto;display:block;margin:0 auto;}
+  .q-img .q-img-alt{font-size:13px;color:#666;margin-top:6px;line-height:1.5;}
   .opts{display:flex;flex-direction:column;gap:9px;margin-top:16px;}
   .opt{
     display:flex;gap:11px;align-items:flex-start;text-align:left;width:100%;
@@ -787,8 +790,8 @@ D. 先增大后减小
         if (!stem || !subj) return;
         var key = subj + "|" + stem.replace(/\s+/g," ").trim();
         var ans = String(q.answer || "").trim().toUpperCase().charAt(0);
-        var rec = { subject: subj, chapter: q.chapter || "", type: q.type || "choice", stem: stem, options: (q.options||[]).slice(0,4), answer: "ABCD".indexOf(ans), answer_text: q.answer_text || "", explanation: q.explanation || "", difficulty: (q.difficulty>=1 && q.difficulty<=5) ? q.difficulty : 3, source: q.source || "generated practice", animation: q.animation || null };
-        if (seen[key]){ var ex = seen[key]; ex.type=rec.type; ex.chapter=rec.chapter; ex.options=rec.options; ex.answer=rec.answer; ex.answer_text=rec.answer_text; ex.explanation=rec.explanation; ex.difficulty=rec.difficulty; ex.source=rec.source; ex.animation=rec.animation; updated++; }
+        var rec = { subject: subj, chapter: q.chapter || "", type: q.type || "choice", stem: stem, options: (q.options||[]).slice(0,4), answer: "ABCD".indexOf(ans), answer_text: q.answer_text || "", explanation: q.explanation || "", difficulty: (q.difficulty>=1 && q.difficulty<=5) ? q.difficulty : 3, source: q.source || "generated practice", animation: q.animation || null, image_svg: q.image_svg || "", image_alt: q.image_alt || "" };
+        if (seen[key]){ var ex = seen[key]; ex.type=rec.type; ex.chapter=rec.chapter; ex.options=rec.options; ex.answer=rec.answer; ex.answer_text=rec.answer_text; ex.explanation=rec.explanation; ex.difficulty=rec.difficulty; ex.source=rec.source; ex.animation=rec.animation; ex.image_svg=rec.image_svg; ex.image_alt=rec.image_alt; updated++; }
         else { rec.id = uid(); store.questions.push(rec); seen[key]=rec; added++; }
       });
       if (added || updated){ save(); if (currentView === "home") renderHome(); }
@@ -1056,8 +1059,31 @@ D. 先增大后减小
       + (q.chapter ? '<span class="tag">'+esc(q.chapter)+'</span>' : "")
       + '<span class="tag">'+typeLabel(qTypeOf(q))+'</span>'
       + '<span class="tag">难度 '+starsFor(q.difficulty)+' '+ (q.difficulty||3) +'星</span>'
+      + (q.image_svg ? '<span class="tag">含图</span>' : '')
       + (practice.wrongMode ? '<span class="tag">错题重练</span>' : "");
     document.getElementById("qStem").textContent = q.stem;
+    // image question: render inline self-drawn SVG safely, fallback to alt text
+    var oldImg = document.getElementById("qImgWrap"); if (oldImg) oldImg.remove();
+    (function(){
+      var svg = q.image_svg || "";
+      var alt = q.image_alt || "";
+      if (!svg && !alt) return;
+      var wrap = document.createElement("div"); wrap.id = "qImgWrap"; wrap.className = "q-img";
+      var safe = "";
+      if (svg && !/<script|on\w+\s*=|javascript:|href\s*=|<foreignObject|<iframe|<image|<object|<embed/i.test(svg)) {
+        var m = String(svg).match(/<svg[\s\S]*<\/svg>/i);
+        if (m) {
+          var tags = m[0].match(/<\/?([a-zA-Z]+)/g) || [];
+          var allowed = ["svg","g","line","circle","rect","polygon","polyline","path","text","ellipse"];
+          var ok = tags.every(function(tag){ var name = tag.replace(/<\/?/,"").toLowerCase(); return allowed.indexOf(name) >= 0; });
+          if (ok) safe = m[0];
+        }
+      }
+      if (safe) wrap.innerHTML = safe;
+      if (alt) { var d = document.createElement("div"); d.className = "q-img-alt"; d.textContent = "图示说明：" + alt; wrap.appendChild(d); }
+      else if (!safe) { wrap.textContent = "（本题含图示，图示未能渲染）"; }
+      var stemWrap = document.querySelector(".q-stemwrap"); if (stemWrap) stemWrap.appendChild(wrap);
+    })();
     var opts = document.getElementById("qOpts");
     opts.innerHTML = "";
     var ty = qTypeOf(q);
