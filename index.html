@@ -223,6 +223,9 @@
   .tag{font-size:12px;font-weight:600;padding:2.5px 9px;border-radius:999px;background:var(--surface2);color:var(--ink2);}
   .tag.subj{color:#fff;}
   .q-stem{font-size:17.5px;line-height:1.65;font-weight:550;white-space:pre-wrap;word-break:break-word;}
+  .q-img{margin-top:12px;border:1px solid #eee;border-radius:10px;padding:10px;background:#fff;overflow:hidden;}
+  .q-img svg{width:100%;max-width:420px;height:auto;display:block;margin:0 auto;}
+  .q-img .q-img-alt{font-size:13px;color:#666;margin-top:6px;line-height:1.5;}
   .opts{display:flex;flex-direction:column;gap:9px;margin-top:16px;}
   .opt{
     display:flex;gap:11px;align-items:flex-start;text-align:left;width:100%;
@@ -385,14 +388,6 @@
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
   footer.foot{padding:6px 0 26px;color:var(--ink3);font-size:12.5px;text-align:center;}
 
-  /* ---------- 专题刷题 ---------- */
-  .topic-grid{display:grid;grid-template-columns:1fr;gap:10px;}
-  @media (min-width:620px){ .topic-grid{grid-template-columns:1fr 1fr;} }
-  .topic-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 15px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;}
-  .topic-name{font-size:16px;font-weight:700;line-height:1.45;word-break:break-word;}
-  .topic-meta{font-size:13px;color:var(--ink2);line-height:1.55;}
-  .topic-foot{display:flex;gap:8px;margin-top:auto;}
-  .topic-foot .btn{flex:1;justify-content:center;}
   /* 手机端收紧（放在最后，避免被前面的基础规则覆盖） */
   @media (max-width:640px){
     .stat-strip{grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:16px;}
@@ -444,14 +439,6 @@
 
     <div class="sec-head"><h3>六个科目</h3><span>点「开始刷题」直接进入该科练习</span></div>
     <div class="subj-grid" id="subjGrid"></div>
-
-    <div class="sec-head"><h3>专题刷题</h3><span>按章节一个专题一个专题练</span></div>
-    <div class="panel">
-      <p class="desc" id="homeTopicSummary">专题按章节自动分组，点进去就是该专题的全部题目。</p>
-      <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:12px;">
-        <button class="btn primary" type="button" data-goto="topics">去专题刷题</button>
-      </div>
-    </div>
 
     <div class="sec-head"><h3>在 iPad 上使用</h3></div>
     <div class="panel">
@@ -567,29 +554,6 @@
         </div>
       </div>
     </div>
-  </section>
-
-  <!-- ================= 专题刷题 ================= -->
-  <section class="view" id="view-topics">
-    <div class="sec-head" style="margin-top:2px;"><h3>专题刷题</h3><span id="topicHint"></span></div>
-    <div class="panel">
-      <div class="setup-row">
-        <div class="field">
-          <label for="topicSubject">科目</label>
-          <select id="topicSubject"></select>
-        </div>
-        <div class="field">
-          <label for="topicDifficulty">难度</label>
-          <select id="topicDifficulty"><option value="">全部难度</option><option value="1">★☆☆☆☆ 1星</option><option value="2">★★☆☆☆ 2星</option><option value="3">★★★☆☆ 3星</option><option value="4">★★★★☆ 4星</option><option value="5">★★★★★ 5星</option></select>
-        </div>
-        <div class="field">
-          <label for="topicType">题型</label>
-          <select id="topicType"><option value="">全部题型</option><option value="choice">选择题</option><option value="truefalse">判断题</option><option value="fill">填空题</option><option value="short">简答题</option></select>
-        </div>
-      </div>
-      <p class="desc" style="margin-top:12px;">专题按题库里的“章节”字段实时分组，只列出有题的专题；点一个专题的“开始刷题”，就只刷该专题的题，判分、解析、难度星级、错题本、草稿板都和普通刷题一样。上面选了难度或题型后，专题里的题数和开始的轮次都会按这个筛选来。</p>
-    </div>
-    <div id="topicList"></div>
   </section>
 
   <!-- ================= 错题本 ================= -->
@@ -826,11 +790,11 @@ D. 先增大后减小
         if (!stem || !subj) return;
         var key = subj + "|" + stem.replace(/\s+/g," ").trim();
         var ans = String(q.answer || "").trim().toUpperCase().charAt(0);
-        var rec = { subject: subj, chapter: q.chapter || "", type: q.type || "choice", stem: stem, options: (q.options||[]).slice(0,4), answer: "ABCD".indexOf(ans), answer_text: q.answer_text || "", explanation: q.explanation || "", difficulty: (q.difficulty>=1 && q.difficulty<=5) ? q.difficulty : 3, source: q.source || "generated practice", animation: q.animation || null, image_svg: q.image_svg || null, image_alt: q.image_alt || "" };
+        var rec = { subject: subj, chapter: q.chapter || "", type: q.type || "choice", stem: stem, options: (q.options||[]).slice(0,4), answer: "ABCD".indexOf(ans), answer_text: q.answer_text || "", explanation: q.explanation || "", difficulty: (q.difficulty>=1 && q.difficulty<=5) ? q.difficulty : 3, source: q.source || "generated practice", animation: q.animation || null, image_svg: q.image_svg || "", image_alt: q.image_alt || "" };
         if (seen[key]){ var ex = seen[key]; ex.type=rec.type; ex.chapter=rec.chapter; ex.options=rec.options; ex.answer=rec.answer; ex.answer_text=rec.answer_text; ex.explanation=rec.explanation; ex.difficulty=rec.difficulty; ex.source=rec.source; ex.animation=rec.animation; ex.image_svg=rec.image_svg; ex.image_alt=rec.image_alt; updated++; }
         else { rec.id = uid(); store.questions.push(rec); seen[key]=rec; added++; }
       });
-      if (added || updated){ save(); if (currentView === "home") renderHome(); if (currentView === "topics") renderTopics(); }
+      if (added || updated){ save(); if (currentView === "home") renderHome(); }
     }).catch(function(){});
   }
   function esc(s){
@@ -842,7 +806,6 @@ D. 先增大后减小
   /* ---------------- 导航 ---------------- */
   var TABS = [
     { id:"home",     label:"首页",   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>' },
-    { id:"topics",   label:"专题",   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>' },
     { id:"practice", label:"刷题",   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>' },
     { id:"wrong",    label:"错题本", icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5Z"/><path d="m9 8 6 6M15 8l-6 6"/></svg>' },
     { id:"add",      label:"录题",   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>' },
@@ -878,7 +841,6 @@ D. 先增大后减小
     buildTabs();
     if (view==="home") renderHome();
     if (view==="practice") renderPracticeSetup(arg);
-    if (view==="topics") renderTopics();
     if (view==="wrong") renderWrong();
     if (view==="import") renderImportHome();
     if (view==="library") renderLibrary();
@@ -956,94 +918,6 @@ D. 先增大后减小
         });
       });
       grid.appendChild(card);
-    });
-    var hs = document.getElementById("homeTopicSummary");
-    if (hs){
-      var tg = topicGroups();
-      hs.textContent = tg.length
-        ? "专题按章节自动分组：当前共 " + tg.length + " 个专题、" + tg.reduce(function(a,g){return a+g.total;},0) + " 道有章节的题，点进去就是该专题的全部题目。"
-        : "专题按章节自动分组，点进去就是该专题的全部题目。";
-    }
-  }
-
-  /* ---------------- 专题刷题 ---------------- */
-  function topicGroups(){
-    var map = {};
-    store.questions.forEach(function(q){
-      if (!q.chapter) return;
-      var key = q.subject + "\u0001" + q.chapter;
-      if (!map[key]) map[key] = { subject: q.subject, chapter: q.chapter, questions: [], total: 0 };
-      map[key].questions.push(q); map[key].total++;
-    });
-    var out = [];
-    for (var k in map) if (Object.prototype.hasOwnProperty.call(map, k)) out.push(map[k]);
-    return out;
-  }
-  function renderTopics(){
-    var sid = document.getElementById("topicSubject") ? document.getElementById("topicSubject").value : "";
-    var df = document.getElementById("topicDifficulty") ? document.getElementById("topicDifficulty").value : "";
-    var tp = document.getElementById("topicType") ? document.getElementById("topicType").value : "";
-    var groups = topicGroups().map(function(g){
-      var qs = g.questions.filter(function(q){
-        return (!sid || q.subject===sid)
-          && (!df || String(q.difficulty||3)===df)
-          && (!tp || qTypeOf(q)===tp);
-      });
-      return { subject: g.subject, chapter: g.chapter, total: g.total, questions: qs };
-    }).filter(function(g){ return g.questions.length > 0; });
-    var order = {};
-    SUBJECTS.forEach(function(s,i){ order[s.id]=i; });
-    groups.sort(function(a,b){
-      if (order[a.subject]!==order[b.subject]) return order[a.subject]-order[b.subject];
-      if (b.questions.length!==a.questions.length) return b.questions.length-a.questions.length;
-      return a.chapter < b.chapter ? -1 : (a.chapter > b.chapter ? 1 : 0);
-    });
-    var totalQ = groups.reduce(function(a,g){ return a+g.questions.length; }, 0);
-    document.getElementById("topicHint").textContent = groups.length
-      ? "共 " + groups.length + " 个专题 · " + totalQ + " 道题" + (sid||df||tp ? "（按当前筛选）" : "")
-      : "";
-    var wrap = document.getElementById("topicList");
-    wrap.innerHTML = "";
-    if (!groups.length){
-      wrap.innerHTML = '<div class="empty-state"><div class="big">这里还没有可刷的专题</div>'
-        + '<p>' + (store.questions.length ? "当前筛选下没有题，换一下科目、难度或题型试试；或者去刷题页按章节刷。" : "题库还是空的，先录题或等联网题同步完成，这里就会按章节列出专题。") + '</p>'
-        + '<button class="btn primary" type="button" data-goto="practice">去刷题</button></div>';
-      bindGoto(wrap);
-      return;
-    }
-    var curSubj = null;
-    groups.forEach(function(g){
-      if (g.subject!==curSubj){
-        curSubj = g.subject;
-        var s = subjById(g.subject);
-        var subGroups = groups.filter(function(x){ return x.subject===curSubj; });
-        var subTotal = subGroups.reduce(function(a,x){ return a+x.questions.length; }, 0);
-        var head = document.createElement("div");
-        head.className = "group-title";
-        head.innerHTML = '<span class="subj-dot" style="background:'+s.color+';width:30px;height:30px;font-size:15px;border-radius:8px;">'+esc(s.name.charAt(0))+'</span>'
-          + esc(s.name) + ' <span class="count">' + subGroups.length + ' 个专题 · ' + subTotal + ' 道</span>';
-        wrap.appendChild(head);
-        var grid = document.createElement("div");
-        grid.className = "topic-grid";
-        grid.dataset.topicGridFor = curSubj;
-        wrap.appendChild(grid);
-      }
-      var gridEl = wrap.querySelector('[data-topic-grid-for="'+curSubj+'"]');
-      var card = document.createElement("div");
-      card.className = "topic-card";
-      var tc = { choice:0, truefalse:0, fill:0, short:0 };
-      g.questions.forEach(function(q){ var ty=qTypeOf(q); if (tc.hasOwnProperty(ty)) tc[ty]++; });
-      card.innerHTML = '<div class="topic-name">'+esc(g.chapter)+'</div>'
-        + '<div class="topic-meta">'+g.questions.length+' 道题 · 选择 '+tc.choice+' · 判断 '+tc.truefalse+' · 填空 '+tc.fill+' · 简答 '+tc.short
-        + (g.questions.length!==g.total ? '（本专题共 '+g.total+' 道）' : '') + '</div>'
-        + '<div class="topic-foot"><button class="btn primary" type="button">开始刷题</button></div>';
-      card.querySelector("button").addEventListener("click", function(){
-        var qs = g.questions.slice();
-        if (!qs.length){ showToast("这个专题在当前筛选下没有题"); return; }
-        go("practice");
-        startPractice(qs, false);
-      });
-      gridEl.appendChild(card);
     });
   }
 
@@ -1185,15 +1059,31 @@ D. 先增大后减小
       + (q.chapter ? '<span class="tag">'+esc(q.chapter)+'</span>' : "")
       + '<span class="tag">'+typeLabel(qTypeOf(q))+'</span>'
       + '<span class="tag">难度 '+starsFor(q.difficulty)+' '+ (q.difficulty||3) +'星</span>'
+      + (q.image_svg ? '<span class="tag">含图</span>' : '')
       + (practice.wrongMode ? '<span class="tag">错题重练</span>' : "");
     document.getElementById("qStem").textContent = q.stem;
-    var oldImg = document.getElementById("qImageWrap"); if (oldImg) oldImg.remove();
-    if (q.image_svg){
-      var iw = document.createElement("div"); iw.id="qImageWrap"; iw.style="margin-top:12px;max-width:100%;overflow:hidden;";
-      try { iw.innerHTML = q.image_svg; } catch(e){}
-      var stemWrap2 = document.querySelector(".q-stemwrap"); if (stemWrap2) stemWrap2.appendChild(iw);
-      if (q.image_alt){ var alt = document.createElement("div"); alt.style="font-size:12.5px;color:#888;margin-top:4px;"; alt.textContent = q.image_alt; iw.appendChild(alt); }
-    }
+    // image question: render inline self-drawn SVG safely, fallback to alt text
+    var oldImg = document.getElementById("qImgWrap"); if (oldImg) oldImg.remove();
+    (function(){
+      var svg = q.image_svg || "";
+      var alt = q.image_alt || "";
+      if (!svg && !alt) return;
+      var wrap = document.createElement("div"); wrap.id = "qImgWrap"; wrap.className = "q-img";
+      var safe = "";
+      if (svg && !/<script|on\w+\s*=|javascript:|href\s*=|<foreignObject|<iframe|<image|<object|<embed/i.test(svg)) {
+        var m = String(svg).match(/<svg[\s\S]*<\/svg>/i);
+        if (m) {
+          var tags = m[0].match(/<\/?([a-zA-Z]+)/g) || [];
+          var allowed = ["svg","g","line","circle","rect","polygon","polyline","path","text","ellipse"];
+          var ok = tags.every(function(tag){ var name = tag.replace(/<\/?/,"").toLowerCase(); return allowed.indexOf(name) >= 0; });
+          if (ok) safe = m[0];
+        }
+      }
+      if (safe) wrap.innerHTML = safe;
+      if (alt) { var d = document.createElement("div"); d.className = "q-img-alt"; d.textContent = "图示说明：" + alt; wrap.appendChild(d); }
+      else if (!safe) { wrap.textContent = "（本题含图示，图示未能渲染）"; }
+      var stemWrap = document.querySelector(".q-stemwrap"); if (stemWrap) stemWrap.appendChild(wrap);
+    })();
     var opts = document.getElementById("qOpts");
     opts.innerHTML = "";
     var ty = qTypeOf(q);
@@ -1280,10 +1170,6 @@ D. 先增大后减小
   }
 
   document.getElementById("pfSubject").addEventListener("change", refreshChapterSelect);
-  ["topicSubject","topicDifficulty","topicType"].forEach(function(id){
-    var el = document.getElementById(id);
-    if (el) el.addEventListener("change", function(){ if (currentView==="topics") renderTopics(); });
-  });
   document.getElementById("btnStartPractice").addEventListener("click", function(){
     var sid = document.getElementById("pfSubject").value;
     var ch = document.getElementById("pfChapter").value;
@@ -2148,7 +2034,7 @@ D. 先增大后减小
   function downloadOffline(){
     var clone = document.documentElement.cloneNode(true);
     // 把克隆里的动态区域清回初始状态，保证下载的文件打开时干净地从本地数据渲染
-    var dyn = clone.querySelectorAll("#subjGrid,#wrongList,#libList,#qOpts,#qTags,#impList,#topicList");
+    var dyn = clone.querySelectorAll("#subjGrid,#wrongList,#libList,#qOpts,#qTags,#impList");
     dyn.forEach(function(el){ el.innerHTML = ""; });
     var ipp = clone.querySelector("#impPreviewPanel");
     if (ipp) ipp.style.display = "none";
@@ -2186,7 +2072,6 @@ D. 先增大后减小
   /* ---------------- 初始化 ---------------- */
   load();
   fillSubjectSelect(document.getElementById("pfSubject"), true);
-  if (document.getElementById("topicSubject")) fillSubjectSelect(document.getElementById("topicSubject"), true);
   fillSubjectSelect(document.getElementById("afSubject"), false);
   fillSubjectSelect(document.getElementById("libSubject"), true);
   document.getElementById("pfSubject").value = "";
