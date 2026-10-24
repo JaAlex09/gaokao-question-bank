@@ -462,6 +462,14 @@
           <select id="pfChapter"><option value="">全部章节</option></select>
         </div>
         <div class="field">
+          <label for="pfDifficulty">难度</label>
+          <select id="pfDifficulty"><option value="">全部难度</option><option value="1">★☆☆☆☆ 1星</option><option value="2">★★☆☆☆ 2星</option><option value="3">★★★☆☆ 3星</option><option value="4">★★★★☆ 4星</option><option value="5">★★★★★ 5星</option></select>
+        </div>
+        <div class="field">
+          <label for="pfType">题型</label>
+          <select id="pfType"><option value="">全部题型</option><option value="choice">选择题</option><option value="truefalse">判断题</option><option value="fill">填空题</option><option value="short">简答题</option></select>
+        </div>
+        <div class="field">
           <label for="pfOrder">出题顺序</label>
           <select id="pfOrder">
             <option value="seq">按录入顺序</option>
@@ -769,8 +777,8 @@ D. 先增大后减小
       var arr = data && Array.isArray(data.questions) ? data.questions : (Array.isArray(data) ? data : []);
       if (!arr.length) return;
       var seen = {};
-      store.questions.forEach(function(q){ seen[q.subject + "|" + String(q.stem||"").replace(/\s+/g," ").trim()] = true; });
-      var added = 0;
+      store.questions.forEach(function(q){ seen[q.subject + "|" + String(q.stem||"").replace(/\s+/g," ").trim()] = q; });
+      var added = 0, updated = 0;
       arr.forEach(function(q){
         var subj = q.subject;
         var map = { "语文":"yuwen", "数学":"shuxue", "英语":"yingyu", "物理":"wuli", "化学":"huaxue", "生物":"shengwu" };
@@ -778,13 +786,12 @@ D. 先增大后减小
         var stem = String(q.question || q.stem || "").trim();
         if (!stem || !subj) return;
         var key = subj + "|" + stem.replace(/\s+/g," ").trim();
-        if (seen[key]) return;
-        seen[key] = true;
         var ans = String(q.answer || "").trim().toUpperCase().charAt(0);
-        store.questions.push({ id: uid(), subject: subj, chapter: q.chapter || "", stem: stem, options: (q.options||[]).slice(0,4), answer: "ABCD".indexOf(ans), explanation: q.explanation || "" });
-        added++;
+        var rec = { subject: subj, chapter: q.chapter || "", type: q.type || "choice", stem: stem, options: (q.options||[]).slice(0,4), answer: "ABCD".indexOf(ans), answer_text: q.answer_text || "", explanation: q.explanation || "", difficulty: (q.difficulty>=1 && q.difficulty<=5) ? q.difficulty : 3, source: q.source || "generated practice", animation: q.animation || null };
+        if (seen[key]){ var ex = seen[key]; ex.type=rec.type; ex.chapter=rec.chapter; ex.options=rec.options; ex.answer=rec.answer; ex.answer_text=rec.answer_text; ex.explanation=rec.explanation; ex.difficulty=rec.difficulty; ex.source=rec.source; ex.animation=rec.animation; updated++; }
+        else { rec.id = uid(); store.questions.push(rec); seen[key]=rec; added++; }
       });
-      if (added){ save(); if (currentView === "home") renderHome(); }
+      if (added || updated){ save(); if (currentView === "home") renderHome(); }
     }).catch(function(){});
   }
   function esc(s){
@@ -903,7 +910,7 @@ D. 先增大后减小
         + foot;
       card.querySelectorAll("button").forEach(function(btn){
         btn.addEventListener("click", function(){
-          if (btn.dataset.act==="practice"){ go("practice", s.id); document.getElementById("pfSubject").value = s.id; document.getElementById("pfChapter").value = ""; document.getElementById("btnStartPractice").click(); }
+          if (btn.dataset.act==="practice"){ go("practice", s.id); document.getElementById("pfSubject").value = s.id; document.getElementById("pfChapter").value = ""; if (document.getElementById("pfDifficulty")) document.getElementById("pfDifficulty").value=""; if (document.getElementById("pfType")) document.getElementById("pfType").value=""; document.getElementById("btnStartPractice").click(); }
           else { document.getElementById("afSubject").value = s.id; go("add"); }
         });
       });
@@ -976,7 +983,68 @@ D. 先增大后减小
     showPracticeCard();
     showQuestion();
   }
+
+  function starsFor(d){ d = (d>=1 && d<=5) ? d : 3; return "★".repeat(d) + "☆".repeat(5-d); }
+  function typeLabel(ty){ return ty==="truefalse" ? "判断题" : ty==="fill" ? "填空题" : ty==="short" ? "简答题" : "选择题"; }
+  function qTypeOf(q){ return q.type || "choice"; }
+  var animFrame = null;
+  function stopAnim(){ if (animFrame){ cancelAnimationFrame(animFrame); animFrame=null; } }
+  function startAnim(kind, title){
+    var cv = document.getElementById("animCanvas"); if (!cv || !kind) return;
+    var ctx = cv.getContext("2d"); var W=cv.width, H=cv.height; var t0 = Date.now();
+    function draw(){
+      var tt = (Date.now()-t0)/1000; ctx.clearRect(0,0,W,H);
+      ctx.strokeStyle="#e5e0d5"; ctx.beginPath(); for (var gx=0;gx<=W;gx+=32){ ctx.moveTo(gx,0); ctx.lineTo(gx,H); } for (var gy=0;gy<=H;gy+=32){ ctx.moveTo(0,gy); ctx.lineTo(W,gy); } ctx.stroke();
+      ctx.fillStyle="#2456c8"; ctx.strokeStyle="#2456c8"; ctx.lineWidth=2;
+      function dot(x,y,r){ ctx.beginPath(); ctx.arc(x,y,r||6,0,Math.PI*2); ctx.fill(); }
+      if (kind==="projectile" || kind==="parabola"){
+        ctx.beginPath(); ctx.moveTo(20,H-20); for (var x=0;x<=260;x+=4){ var px=20+x, py=H-20 - (kind==="projectile" ? 0.0045*x*(260-x) : 0.0022*x*x); if (x===0) ctx.moveTo(px,py); else ctx.lineTo(px,py); } ctx.stroke();
+        var prog = (tt%3)/3; var ax=20+260*prog; var ay=H-20 - (kind==="projectile" ? 0.0045*(260*prog)*(260-260*prog) : 0.0022*(260*prog)*(260*prog)); dot(ax,ay,7);
+      } else if (kind==="circular" || kind==="magnetic"){
+        var cx=W/2, cy=H/2, r=60, a=tt*1.2; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke(); dot(cx+Math.cos(a)*r, cy+Math.sin(a)*r,7); ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r); ctx.stroke();
+      } else if (kind==="wave" || kind==="sine"){
+        ctx.beginPath(); for (var wx=0;wx<=W;wx+=3){ var wy=H/2 + Math.sin(wx/28 - tt*2.2)*42; if (wx===0) ctx.moveTo(wx,wy); else ctx.lineTo(wx,wy); } ctx.stroke(); dot(40, H/2 + Math.sin(40/28 - tt*2.2)*42, 6);
+      } else if (kind==="vector" || kind==="geometry_rotate"){
+        var ang=tt*0.9; ctx.beginPath(); ctx.moveTo(40,H-40); ctx.lineTo(40+Math.cos(-ang)*180, H-40+Math.sin(-ang)*180); ctx.stroke(); dot(40+Math.cos(-ang)*180, H-40+Math.sin(-ang)*180, 7);
+        if (kind==="geometry_rotate"){ ctx.beginPath(); ctx.moveTo(160,60); ctx.lineTo(220,140); ctx.lineTo(100,140); ctx.closePath(); ctx.stroke(); }
+      } else if (kind==="pendulum"){
+        var pa=Math.sin(tt*1.4)*0.7; var px2=160+Math.sin(pa)*110, py2=30+Math.cos(pa)*110; ctx.beginPath(); ctx.moveTo(160,30); ctx.lineTo(px2,py2); ctx.stroke(); dot(px2,py2,9);
+      } else if (kind==="spring"){
+        var mx=60+ (Math.sin(tt*2)*70+70); ctx.beginPath(); ctx.moveTo(20,100); ctx.lineTo(mx,100); ctx.stroke(); ctx.strokeRect(mx,80,44,40);
+      } else if (kind==="electric"){
+        dot(160,100,8); ctx.beginPath(); for (var k=0;k<8;k++){ var aa=k*Math.PI/4; ctx.moveTo(160,100); ctx.lineTo(160+Math.cos(aa)*70, 100+Math.sin(aa)*70); } ctx.stroke(); var ea=(tt%2)/2; dot(160+Math.cos(ea*6.28)*45, 100+Math.sin(ea*6.28)*45, 5);
+      } else if (kind==="triangle"){
+        ctx.beginPath(); ctx.moveTo(160,40); ctx.lineTo(240,160); ctx.lineTo(80,160); ctx.closePath(); ctx.stroke(); dot(160+Math.sin(tt)*40, 100, 6);
+      } else { dot(160,100,8); }
+      animFrame = requestAnimationFrame(draw);
+    }
+    draw();
+  }
+  function recordResult(ok){
+    var q = practice.queue[practice.idx];
+    store.history.push({ qid: q.id, ok: ok, t: Date.now() });
+    var wi = store.wrongIds.indexOf(q.id);
+    if (!ok && wi < 0) store.wrongIds.push(q.id);
+    if (ok && wi >= 0) store.wrongIds.splice(wi, 1);
+    if (ok) practice.right++; else practice.wrong++;
+    save();
+  }
+  function showVerdict(ok, correctText){
+    var q = practice.queue[practice.idx];
+    document.getElementById("qScore").textContent = "对 " + practice.right + " · 错 " + practice.wrong;
+    var v = document.getElementById("qVerdict");
+    v.className = "verdict show " + (ok ? "ok" : "bad");
+    v.innerHTML = '<div class="vt">' + (ok ? "✓ 答对了" : "✗ 答错了，正确答案是 " + correctText) + '</div>'
+      + (q.explanation ? '<div class="expl">' + esc(q.explanation) + '</div>' : "")
+      + (!ok ? '<div class="expl" style="margin-top:4px;">已自动收进错题本。</div>' : "")
+      + (ok && practice.wrongMode ? '<div class="expl" style="margin-top:4px;">已从错题本移出。</div>' : "");
+    var next = document.getElementById("btnNextQ");
+    next.textContent = practice.idx + 1 >= practice.queue.length ? "看结果 →" : "下一题 →";
+    next.style.display = "";
+    document.getElementById("qBar").style.width = Math.round((practice.idx+1)/practice.queue.length*100) + "%";
+  }
   function showQuestion(){
+    stopAnim();
     var q = practice.queue[practice.idx];
     var s = subjById(q.subject);
     practice.answered = false;
@@ -986,57 +1054,78 @@ D. 先增大后减小
     document.getElementById("qTags").innerHTML =
       '<span class="tag subj" style="background:'+s.color+'">'+esc(s.name)+'</span>'
       + (q.chapter ? '<span class="tag">'+esc(q.chapter)+'</span>' : "")
+      + '<span class="tag">'+typeLabel(qTypeOf(q))+'</span>'
+      + '<span class="tag">难度 '+starsFor(q.difficulty)+' '+ (q.difficulty||3) +'星</span>'
       + (practice.wrongMode ? '<span class="tag">错题重练</span>' : "");
     document.getElementById("qStem").textContent = q.stem;
     var opts = document.getElementById("qOpts");
     opts.innerHTML = "";
-    q.options.forEach(function(opt, i){
-      var b = document.createElement("button");
-      b.type = "button"; b.className = "opt";
-      b.innerHTML = '<span class="letter">'+LETTERS[i]+'</span><span class="otext"></span>';
-      b.querySelector(".otext").textContent = opt;
-      b.addEventListener("click", function(){ answer(i); });
-      opts.appendChild(b);
-    });
+    var ty = qTypeOf(q);
+    if (ty==="fill" || ty==="short"){
+      var wrap = document.createElement("div");
+      wrap.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;"><input id="textAns" type="text" placeholder="'+(ty==="fill" ? "把答案填在这里" : "在这里写下你的答案，提交后对照参考答案自评")+'" style="flex:1;min-width:200px;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:16px;"><button class="btn primary" id="btnTextSubmit" type="button">提交答案</button></div>';
+      opts.appendChild(wrap);
+      document.getElementById("btnTextSubmit").addEventListener("click", submitTextAnswer);
+    } else {
+      (q.options||[]).forEach(function(opt, i){
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "opt";
+        b.innerHTML = '<span class="letter">'+LETTERS[i]+'</span><span class="otext"></span>';
+        b.querySelector(".otext").textContent = opt;
+        b.addEventListener("click", function(){ answer(i); });
+        opts.appendChild(b);
+      });
+    }
     var v = document.getElementById("qVerdict");
     v.className = "verdict"; v.innerHTML = "";
     document.getElementById("btnNextQ").style.display = "none";
+    // animation canvas, only when the question carries one
+    var oldAnim = document.getElementById("animWrap"); if (oldAnim) oldAnim.remove();
+    if (q.animation && q.animation.kind){
+      var aw = document.createElement("div"); aw.id="animWrap"; aw.style="margin-top:12px;border:1px solid #eee;border-radius:10px;padding:10px;background:#fff;";
+      aw.innerHTML = '<div style="font-size:13px;color:#666;margin-bottom:6px;">▶ 动画演示：'+esc(q.animation.title||q.animation.kind)+'（页面自绘，无需联网）</div><canvas id="animCanvas" width="320" height="200" style="width:100%;max-width:360px;height:auto;background:#faf8f3;border-radius:8px;"></canvas>';
+      var stemWrap = document.querySelector(".q-stemwrap"); if (stemWrap) stemWrap.appendChild(aw);
+      startAnim(q.animation.kind, q.animation.title);
+    }
     scratchSyncToQuestion(q.id);
+  }
+  function normAns(s){ return String(s||"").trim().replace(/\s+/g,"").replace(/[，。；、]/g,"").toLowerCase(); }
+  function submitTextAnswer(){
+    if (!practice || practice.answered) return;
+    var q = practice.queue[practice.idx]; var ty = qTypeOf(q);
+    var user = document.getElementById("textAns") ? document.getElementById("textAns").value : "";
+    if (ty==="short"){
+      practice.answered = true;
+      var v = document.getElementById("qVerdict");
+      v.className = "verdict show";
+      v.innerHTML = '<div class="vt">参考答案如下，请自评：</div><div class="expl"><b>参考答案：</b>'+esc(q.answer_text||"")+'</div>'
+        + (q.explanation ? '<div class="expl">'+esc(q.explanation)+'</div>' : "")
+        + '<div style="display:flex;gap:8px;margin-top:10px;"><button class="btn primary" id="btnSelfOk" type="button">我答对了</button><button class="btn" id="btnSelfBad" type="button">我答错了</button></div>';
+      document.getElementById("btnSelfOk").addEventListener("click", function(){ practice.answered=true; recordResult(true); showVerdict(true, ""); });
+      document.getElementById("btnSelfBad").addEventListener("click", function(){ practice.answered=true; recordResult(false); showVerdict(false, q.answer_text||""); });
+      return;
+    }
+    // fill: exact normalized match against answer_text variants split by / 、 ;
+    var variants = String(q.answer_text||"").split(/\/|、|；|;/).map(normAns).filter(function(x){return x;});
+    var ok = variants.indexOf(normAns(user)) >= 0;
+    practice.answered = true; recordResult(ok); showVerdict(ok, q.answer_text||"");
   }
   function answer(i){
     if (!practice || practice.answered) return;
     practice.answered = true;
     var q = practice.queue[practice.idx];
     var ok = i === q.answer;
-    store.history.push({ qid: q.id, ok: ok, t: Date.now() });
-    var wi = store.wrongIds.indexOf(q.id);
-    if (!ok && wi < 0) store.wrongIds.push(q.id);
-    if (ok && wi >= 0) store.wrongIds.splice(wi, 1);
-    if (ok) practice.right++; else practice.wrong++;
-    save();
-
+    recordResult(ok);
     var btns = document.getElementById("qOpts").children;
     for (var k=0;k<btns.length;k++){
       btns[k].disabled = true;
       if (k === q.answer) btns[k].classList.add("right");
       else if (k === i) btns[k].classList.add("wrong");
-      else if (k === i) btns[k].classList.add("picked");
     }
-    if (i !== q.answer) btns[i].classList.add("wrong");
-    document.getElementById("qScore").textContent = "对 " + practice.right + " · 错 " + practice.wrong;
-    var v = document.getElementById("qVerdict");
-    v.className = "verdict show " + (ok ? "ok" : "bad");
-    v.innerHTML = '<div class="vt">' + (ok ? "✓ 答对了" : "✗ 答错了，正确答案是 " + LETTERS[q.answer]) + '</div>'
-      + (q.explanation ? '<div class="expl">' + esc(q.explanation) + '</div>'
-                        : (ok ? "" : '<div class="expl">这道题还没有录解析，可以回题库给它补上。</div>'))
-      + (!ok ? '<div class="expl" style="margin-top:4px;">已自动收进错题本。</div>' : "")
-      + (ok && practice.wrongMode ? '<div class="expl" style="margin-top:4px;">已从错题本移出。</div>' : "");
-    var next = document.getElementById("btnNextQ");
-    next.textContent = practice.idx + 1 >= practice.queue.length ? "看结果 →" : "下一题 →";
-    next.style.display = "";
-    document.getElementById("qBar").style.width = Math.round((practice.idx+1)/practice.queue.length*100) + "%";
+    showVerdict(ok, LETTERS[q.answer]);
   }
   function finishPractice(){
+    stopAnim();
     if (typeof scratchPersist === "function") scratchPersist();
     hidePracticeCard();
     document.getElementById("practiceResult").style.display = "";
@@ -1058,8 +1147,12 @@ D. 先增大后减小
   document.getElementById("btnStartPractice").addEventListener("click", function(){
     var sid = document.getElementById("pfSubject").value;
     var ch = document.getElementById("pfChapter").value;
+    var df = document.getElementById("pfDifficulty") ? document.getElementById("pfDifficulty").value : "";
+    var tp = document.getElementById("pfType") ? document.getElementById("pfType").value : "";
     var queue = store.questions.filter(function(q){
-      return (!sid || q.subject===sid) && (!ch || q.chapter===ch);
+      return (!sid || q.subject===sid) && (!ch || q.chapter===ch)
+        && (!df || String(q.difficulty||3)===df)
+        && (!tp || qTypeOf(q)===tp);
     });
     if (document.getElementById("pfOrder").value === "rand"){
       for (var i=queue.length-1;i>0;i--){
@@ -1318,10 +1411,13 @@ D. 先增大后减小
   /* ---------------- 错题本 ---------------- */
   function qItemHTML(q, inWrong){
     var s = subjById(q.subject);
+    var ty = qTypeOf(q);
+    var ansText = (ty==="fill" || ty==="short") ? esc(q.answer_text||"") : (q.options && q.answer>=0 ? LETTERS[q.answer] + '．' + esc(q.options[q.answer]) : "");
     return '<div class="meta"><span class="tag subj" style="background:'+s.color+'">'+esc(s.name)+'</span>'
-      + (q.chapter ? '<span class="tag">'+esc(q.chapter)+'</span>' : "") + '</div>'
+      + (q.chapter ? '<span class="tag">'+esc(q.chapter)+'</span>' : "")
+      + '<span class="tag">'+typeLabel(ty)+'</span><span class="tag">难度 '+starsFor(q.difficulty)+'</span></div>'
       + '<div class="stem">' + esc(q.stem) + '</div>'
-      + '<div class="ans">正确答案：<b>' + LETTERS[q.answer] + '．' + esc(q.options[q.answer]) + '</b>'
+      + '<div class="ans">正确答案：<b>' + ansText + '</b>'
       + (q.explanation ? '<br>解析：' + esc(q.explanation) : "") + '</div>';
   }
   function renderWrong(){
