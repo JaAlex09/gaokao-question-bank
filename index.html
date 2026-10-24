@@ -358,27 +358,6 @@
     background:var(--surface2);color:var(--ink);display:grid;place-items:center;font-size:12.5px;
   }
   .steps b::before{content:counter(st);}
-  /* ---------- 导入题目 ---------- */
-  .tpl{
-    background:var(--surface2);border:1px solid var(--line);border-radius:var(--radius-s);
-    padding:13px 15px;font-size:13.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word;
-    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  }
-  .imp-status{font-size:12px;font-weight:700;padding:2.5px 9px;border-radius:999px;white-space:nowrap;}
-  .imp-status.ok{background:var(--ok-bg);color:var(--ok);}
-  .imp-status.bad{background:var(--bad-bg);color:var(--bad);}
-  .imp-status.dup{background:var(--warn-bg);color:var(--warn-ink);}
-  .imp-status.skip{background:var(--surface2);color:var(--ink3);}
-  .imp-err{font-size:13.5px;color:var(--bad);margin-top:7px;line-height:1.55;}
-  .imp-opts{font-size:13.5px;color:var(--ink2);margin-top:7px;line-height:1.65;white-space:pre-wrap;word-break:break-word;}
-  .imp-opts b{color:var(--ok);}
-  .imp-raw{
-    font-size:12.5px;color:var(--ink3);white-space:pre-wrap;word-break:break-word;
-    margin-top:7px;max-height:110px;overflow:hidden;
-  }
-  .imp-edit{margin-top:12px;border-top:1.5px dashed var(--line);padding-top:13px;display:none;}
-  .imp-edit.open{display:flex;flex-direction:column;gap:12px;}
-
   .toast{
     position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(16px);
     background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;font-weight:600;
@@ -655,88 +634,16 @@
     </div>
   </section>
 
-  <!-- ================= 导入题目 ================= -->
-  <section class="view" id="view-import">
-    <div class="sec-head" style="margin-top:2px;"><h3>导入题目</h3><span id="impHint"></span></div>
-
-    <div class="panel">
-      <h3>从「文件」里选文档导入</h3>
-      <p class="desc" style="margin-bottom:12px;">支持 .json、.md、.txt 三种文件。先把题目文档存到 iPad 的「文件」里（iCloud 云盘或本机都行），再点下面按钮选取——文档只在这台设备上解析，不上传、不联网。解析后先出预览清单，确认了才入库。</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
-        <label class="btn primary" for="impFile" style="margin:0;">⬆ 从文件选取</label>
-        <input type="file" id="impFile" accept=".json,.md,.markdown,.txt,application/json,text/plain,text/markdown" style="display:none;">
-        <div class="field">
-          <label for="impDefaultSubject">题目里没写科目时，默认归到</label>
-          <select id="impDefaultSubject">
-            <option value="">不指定（缺科目会报错）</option>
-            <option value="yuwen">语文</option>
-            <option value="shuxue">数学</option>
-            <option value="yingyu">英语</option>
-            <option value="wuli">物理</option>
-            <option value="huaxue">化学</option>
-            <option value="shengwu">生物</option>
-          </select>
-        </div>
-      </div>
-      <div class="warn-note" style="margin-top:13px;">Word（.docx）和 PDF 不能直接导入：先在「文件」里用 Pages / Word 打开，把内容复制出来，或导出成纯文本，再按下方模板整理成 .md / .txt，或直接用粘贴导入。图片题、复杂公式题先按纯文本处理，公式用文字写明。</div>
-      <div class="form-msg" id="impFileMsg" style="margin-top:12px;"></div>
-    </div>
-
-    <div class="panel">
-      <h3>粘贴导入</h3>
-      <p class="desc" style="margin-bottom:10px;">文件打不开、格式乱时兜底用：把文档内容复制下来粘到这里，点「解析预览」，和文件导入走同一套解析与预览。</p>
-      <div class="field">
-        <textarea id="impPaste" rows="8" placeholder="把题目文本粘贴到这里，按下方模板的格式：一道题一段，用 --- 分隔"></textarea>
-      </div>
-      <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:12px;">
-        <button class="btn primary" id="btnImpParse" type="button">解析预览</button>
-        <button class="btn ghost" id="btnImpClearPaste" type="button">清空输入框</button>
-      </div>
-    </div>
-
-    <div class="panel">
-      <h3>纯文本模板</h3>
-      <p class="desc" style="margin-bottom:10px;">一道题一段，用一行 --- 分隔；字段名用中文加冒号，四个选项以 A. B. C. D. 开头，答案写字母。JSON 文件用同样几个字段：subject、chapter、question、options、answer、explanation，其中 answer 写字母最稳（如 "B"）。</p>
-      <pre class="tpl" id="impTpl">科目：物理
-章节：牛顿运动定律
-题目：一个物体在光滑水平面上受恒力 F 作用，由静止开始运动，则它的加速度（　）
-A. 随时间均匀增大
-B. 保持不变
-C. 随速度增大而减小
-D. 先增大后减小
-答案：B
-解析：合力恒定，由牛顿第二定律 a = F/m，加速度保持不变。
----</pre>
-      <div style="margin-top:10px;">
-        <button class="btn small" id="btnCopyTpl" type="button">复制模板</button>
-      </div>
-    </div>
-
-    <div class="panel" id="impPreviewPanel" style="display:none;">
-      <h3>导入预览</h3>
-      <p class="desc" id="impSummary"></p>
-      <div id="impList" style="margin-top:12px;"></div>
-      <div class="form-msg" id="impMsg" style="margin-top:12px;"></div>
-      <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:14px;">
-        <button class="btn primary" id="btnImpConfirm" type="button">确认导入</button>
-        <button class="btn ghost" id="btnImpDiscard" type="button">放弃这次导入</button>
-      </div>
-    </div>
-  </section>
-
   <!-- ================= 题库与备份 ================= -->
   <section class="view" id="view-library">
     <div class="sec-head" style="margin-top:2px;"><h3>题库与备份</h3><span id="libHint"></span></div>
 
     <div class="panel">
       <h3>备份与恢复</h3>
-      <p class="desc" style="margin-bottom:12px;">离线版的数据只存在这台设备上。导出一份 JSON 备份存到「文件」或 iCloud，换设备、清缓存后导入即可恢复全部题目、记录、错题本和每道题的草稿。</p>
+      <p class="desc" style="margin-bottom:12px;">离线版的数据只存在这台设备上。导出一份 JSON 备份存到「文件」或 iCloud，妥善保存，以防数据丢失。</p>
       <div style="display:flex;gap:9px;flex-wrap:wrap;">
         <button class="btn primary" id="btnExport" type="button">⬇ 导出题库备份（JSON）</button>
-        <label class="btn" for="importFile" style="margin:0;">⬆ 导入备份</label>
-        <input type="file" id="importFile" accept=".json,application/json" style="display:none;">
         <button class="btn" id="btnDownloadLib" type="button">⬇ 再下载一份离线文件</button>
-        <button class="btn" type="button" data-goto="import">⬆ 批量导入题目（文件 / 粘贴）</button>
       </div>
       <div class="form-msg" id="libMsg" style="margin-top:12px;"></div>
     </div>
@@ -849,7 +756,6 @@ D. 先增大后减小
     { id:"practice", label:"刷题",   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>' },
     { id:"wrong",    label:"错题本", icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5Z"/><path d="m9 8 6 6M15 8l-6 6"/></svg>' },
     { id:"add",      label:"录题",   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>' },
-    { id:"import",   label:"导入",   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4"/><path d="m7 9 5-5 5 5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' },
     { id:"library",  label:"题库",   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>' }
   ];
   var currentView = "home";
@@ -883,7 +789,6 @@ D. 先增大后减小
     if (view==="topics") renderTopics();
     if (view==="practice") renderPracticeSetup(arg);
     if (view==="wrong") renderWrong();
-    if (view==="import") renderImportHome();
     if (view==="library") renderLibrary();
     window.scrollTo(0,0);
   }
@@ -1722,35 +1627,7 @@ D. 先增大后减小
       questions: store.questions, history: store.history, wrongIds: store.wrongIds, drafts: store.drafts
     }, null, 2);
     downloadBlob(new Blob([data], { type: "application/json" }), "刷题库备份-" + dateStamp() + ".json");
-    libMsg("备份已导出：共 " + store.questions.length + " 道题（含各题草稿）。把这个 JSON 存好，导入后可完整恢复。", true);
-  });
-  document.getElementById("importFile").addEventListener("change", function(ev){
-    var f = ev.target.files && ev.target.files[0];
-    if (!f) return;
-    var reader = new FileReader();
-    reader.onload = function(){
-      try {
-        var d = JSON.parse(String(reader.result));
-        if (!d || !Array.isArray(d.questions)) throw new Error("bad");
-        var valid = d.questions.filter(function(q){
-          return q && q.id && q.stem && Array.isArray(q.options) && q.options.length===4
-            && typeof q.answer === "number" && q.answer >= 0 && q.answer <= 3
-            && SUBJECTS.some(function(s){ return s.id === q.subject; });
-        });
-        if (!valid.length) throw new Error("empty");
-        store.questions = valid;
-        store.history = Array.isArray(d.history) ? d.history : [];
-        store.wrongIds = Array.isArray(d.wrongIds) ? d.wrongIds.filter(function(id){ return !!findQ(id); }) : [];
-        store.drafts = (d.drafts && typeof d.drafts === "object") ? d.drafts : {};
-        Object.keys(store.drafts).forEach(function(id){ if (!findQ(id)) delete store.drafts[id]; });
-        save(); renderLibrary();
-        libMsg("导入成功：" + valid.length + " 道题已恢复到题库。", true);
-      } catch(e){
-        libMsg("导入失败：这个文件不是有效的题库备份 JSON，原有数据没有改动。", false);
-      }
-      ev.target.value = "";
-    };
-    reader.readAsText(f);
+    libMsg("备份已导出：共 " + store.questions.length + " 道题（含各题草稿）。把这个 JSON 存好，妥善保存。", true);
   });
   document.getElementById("btnWipe").addEventListener("click", function(){
     var btn = this;
@@ -1771,384 +1648,6 @@ D. 先增大后减小
     m.className = "form-msg show " + (ok ? "ok" : "bad");
   }
 
-  /* ---------------- 导入题目（文件 / 粘贴，全部本地解析） ---------------- */
-  var importBatch = null; // { source, items:[{data, raw, errors, status, skipped}] }
-
-  function renderImportHome(){
-    document.getElementById("impHint").textContent = "题库现有 " + store.questions.length + " 道题";
-  }
-  function impFileMsg(text, ok){
-    var m = document.getElementById("impFileMsg");
-    if (!text){ m.className = "form-msg"; m.textContent = ""; return; }
-    m.textContent = text;
-    m.className = "form-msg show " + (ok ? "ok" : "bad");
-  }
-  function subjIdFromName(v){
-    v = String(v == null ? "" : v).trim();
-    if (!v) return "";
-    for (var i = 0; i < SUBJECTS.length; i++){
-      if (SUBJECTS[i].id === v || SUBJECTS[i].name === v) return SUBJECTS[i].id;
-    }
-    return "";
-  }
-  function normStem(s){ return String(s || "").replace(/\s+/g, " ").trim(); }
-  function dupKey(subject, stem){ return subject + "|" + normStem(stem); }
-  function parseAnswerVal(v){
-    if (typeof v === "number"){
-      if (v === 0) return 0;
-      if (v >= 1 && v <= 4) return v - 1;
-      return -1;
-    }
-    var s = String(v == null ? "" : v).trim().toUpperCase();
-    if (!s) return -1;
-    var c = s.charAt(0);
-    if (c >= "A" && c <= "D") return c.charCodeAt(0) - 65;
-    if (c >= "1" && c <= "4") return parseInt(c, 10) - 1;
-    if (c === "0") return 0;
-    return -1;
-  }
-  function validateImpData(d){
-    var errs = [];
-    if (!subjIdFromName(d.subject)){
-      errs.push(d.subject ? "科目无法识别：「" + d.subject + "」（要填 语文 / 数学 / 英语 / 物理 / 化学 / 生物 之一）" : "缺少科目");
-    }
-    if (!String(d.stem || "").trim()) errs.push("缺少题干");
-    var opts = Array.isArray(d.options) ? d.options : [];
-    for (var i = 0; i < 4; i++){
-      if (!String(opts[i] == null ? "" : opts[i]).trim()) errs.push("选项 " + LETTERS[i] + " 缺失或为空");
-    }
-    if (typeof d.answer !== "number" || d.answer < 0 || d.answer > 3) errs.push("答案缺失或无法识别（写 A / B / C / D）");
-    return errs;
-  }
-  function refreshImpStatuses(){
-    if (!importBatch) return;
-    var seen = {};
-    store.questions.forEach(function(q){ seen[dupKey(q.subject, q.stem)] = true; });
-    importBatch.items.forEach(function(it){
-      it.errors = validateImpData(it.data);
-      if (it.errors.length){ it.status = "bad"; return; }
-      var k = dupKey(subjIdFromName(it.data.subject), it.data.stem);
-      if (seen[k]) it.status = "dup";
-      else { it.status = "ok"; if (!it.skipped) seen[k] = true; }
-    });
-  }
-
-  /* 纯文本模板解析：一道题一段，--- 分隔（也兼容不写分隔、只重复「科目：」的情况） */
-  function parseTextQuestions(text){
-    var norm = String(text || "").replace(/\r\n?/g, "\n");
-    var items = [];
-    var d = null, cur = null, rawLines = [];
-    function fresh(){ return { subject: "", chapter: "", stem: "", options: ["", "", "", ""], answer: -1, explanation: "" }; }
-    function hasContent(x){
-      return !!x && !!(x.stem || x.subject || x.answer >= 0 || x.options.some(function(o){ return !!o; }));
-    }
-    function flush(){
-      if (hasContent(d)) items.push({ data: d, raw: rawLines.join("\n").trim() });
-      d = null; cur = null; rawLines = [];
-    }
-    norm.split("\n").forEach(function(line){
-      if (/^\s*(?:-{3,}|—{3,}|={3,})\s*$/.test(line)){ flush(); return; }
-      var m;
-      if ((m = line.match(/^\s*(?:科目|学科)\s*[：:]\s*(.*)$/))){
-        if (d && (d.stem || d.answer >= 0 || d.options.some(function(o){ return !!o; }))) flush();
-        if (!d) d = fresh();
-        d.subject = m[1].trim(); cur = null; rawLines.push(line); return;
-      }
-      if ((m = line.match(/^\s*(?:章节|分类)\s*[：:]\s*(.*)$/))){
-        if (!d) d = fresh();
-        d.chapter = m[1].trim(); cur = null; rawLines.push(line); return;
-      }
-      if ((m = line.match(/^\s*(?:题目|题干|问题)\s*[：:]\s*(.*)$/))){
-        if (d && d.stem && d.answer >= 0) flush();
-        if (!d) d = fresh();
-        d.stem = m[1].trim(); cur = "stem"; rawLines.push(line); return;
-      }
-      if ((m = line.match(/^\s*(?:答案|正确答案)\s*[：:]\s*(.*)$/))){
-        if (!d) d = fresh();
-        d.answer = parseAnswerVal(m[1]); cur = null; rawLines.push(line); return;
-      }
-      if ((m = line.match(/^\s*(?:解析|讲解)\s*[：:]\s*(.*)$/))){
-        if (!d) d = fresh();
-        d.explanation = m[1].trim(); cur = "expl"; rawLines.push(line); return;
-      }
-      if ((m = line.match(/^\s*([ABCD])\s*[.、．:：)）]\s*(.*)$/))){
-        if (!d) d = fresh();
-        var idx = m[1].charCodeAt(0) - 65;
-        d.options[idx] = m[2].trim(); cur = idx; rawLines.push(line); return;
-      }
-      var t = line.trim();
-      if (!t) return;
-      if (!d) d = fresh();
-      rawLines.push(line);
-      if (cur === "stem") d.stem = (d.stem ? d.stem + "\n" : "") + t;
-      else if (cur === "expl") d.explanation = (d.explanation ? d.explanation + "\n" : "") + t;
-      else if (typeof cur === "number") d.options[cur] = (d.options[cur] ? d.options[cur] + "\n" : "") + t;
-      else if (!d.stem && !d.subject){ d.stem = t; cur = "stem"; }
-    });
-    flush();
-    return items;
-  }
-
-  /* JSON 解析：数组，或 { questions:[...] }，或单个题目对象 */
-  function parseJSONQuestions(text){
-    var root = JSON.parse(text);
-    var arr = null;
-    if (Array.isArray(root)) arr = root;
-    else if (root && Array.isArray(root.questions)) arr = root.questions;
-    else if (root && typeof root === "object") arr = [root];
-    if (!arr) throw new Error("format");
-    return arr.map(function(q){
-      q = q || {};
-      var rawOpts = q.options || q.choices || [];
-      var options = ["", "", "", ""];
-      if (Array.isArray(rawOpts)) options = [0, 1, 2, 3].map(function(i){ return String(rawOpts[i] == null ? "" : rawOpts[i]); });
-      else if (rawOpts && typeof rawOpts === "object") options = LETTERS.map(function(L){ return String(rawOpts[L] == null ? "" : rawOpts[L]); });
-      return {
-        data: {
-          subject: q.subject || "",
-          chapter: q.chapter || "",
-          stem: q.question || q.stem || "",
-          options: options,
-          answer: parseAnswerVal(q.answer != null ? q.answer : (q.correctAnswer != null ? q.correctAnswer : "")),
-          explanation: q.explanation || q.analysis || ""
-        },
-        raw: ""
-      };
-    });
-  }
-
-  function handleImpText(text, sourceLabel){
-    var t = String(text || "").trim();
-    if (!t){ impFileMsg("内容是空的，没有解析出题目。", false); return; }
-    var items = null;
-    if (t.charAt(0) === "{" || t.charAt(0) === "["){
-      try { items = parseJSONQuestions(t); }
-      catch (e){
-        impFileMsg("这份内容看起来是 JSON，但格式有误，解析失败。检查一下括号和引号，或者改用纯文本模板导入。原有题库没有改动。", false);
-        return;
-      }
-    } else {
-      items = parseTextQuestions(t);
-    }
-    if (!items.length){
-      impFileMsg("没有解析出题目。按模板检查一下：每道题要有科目、题目、A–D 四个选项和答案，用一行 --- 分隔。", false);
-      return;
-    }
-    impFileMsg("", true);
-    startImpBatch(items, sourceLabel);
-  }
-  function startImpBatch(items, sourceLabel){
-    var defSubj = document.getElementById("impDefaultSubject").value;
-    items.forEach(function(it){
-      if (!String(it.data.subject || "").trim() && defSubj) it.data.subject = defSubj;
-      it.skipped = false;
-    });
-    importBatch = { items: items, source: sourceLabel };
-    refreshImpStatuses();
-    var panel = document.getElementById("impPreviewPanel");
-    panel.style.display = "";
-    var m = document.getElementById("impMsg");
-    m.className = "form-msg"; m.textContent = "";
-    renderImpList();
-    panel.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  function impCounts(){
-    var c = { ok: 0, bad: 0, dup: 0, skip: 0, total: 0 };
-    if (!importBatch) return c;
-    importBatch.items.forEach(function(it){
-      c.total++;
-      if (it.status === "bad") c.bad++;
-      else if (it.status === "dup") c.dup++;
-      else if (it.skipped) c.skip++;
-      else c.ok++;
-    });
-    return c;
-  }
-  function renderImpList(){
-    var list = document.getElementById("impList");
-    list.innerHTML = "";
-    if (!importBatch){ document.getElementById("impSummary").textContent = ""; return; }
-    var c = impCounts();
-    document.getElementById("impSummary").textContent =
-      "来源：" + importBatch.source + "，共解析出 " + c.total + " 条 —— 可导入 " + c.ok + " 道"
-      + (c.dup ? "，与题库（或本批前文）重复 " + c.dup + " 道将自动跳过" : "")
-      + (c.bad ? "，有问题 " + c.bad + " 条（点「编辑」改好，或「移除」）" : "")
-      + (c.skip ? "，已手动跳过 " + c.skip + " 道" : "")
-      + "。点「确认导入」前不会写入题库。";
-    var confirmBtn = document.getElementById("btnImpConfirm");
-    confirmBtn.textContent = "确认导入 " + c.ok + " 道题";
-    confirmBtn.disabled = c.ok === 0;
-    importBatch.items.forEach(function(it, idx){
-      list.appendChild(buildImpItem(it, idx));
-    });
-  }
-  function buildImpItem(it, idx){
-    var item = document.createElement("div");
-    item.className = "qitem";
-    var sid = subjIdFromName(it.data.subject);
-    var chip = it.status === "bad" ? '<span class="imp-status bad">有问题</span>'
-      : it.status === "dup" ? '<span class="imp-status dup">重复 · 将跳过</span>'
-      : it.skipped ? '<span class="imp-status skip">已跳过</span>'
-      : '<span class="imp-status ok">可导入</span>';
-    var html = '<div class="meta">' + chip
-      + '<span class="tag">第 ' + (idx + 1) + ' 条</span>'
-      + (sid ? '<span class="tag subj" style="background:' + subjById(sid).color + '">' + esc(subjById(sid).name) + '</span>'
-             : (it.data.subject ? '<span class="tag">' + esc(it.data.subject) + '</span>' : ""))
-      + (it.data.chapter ? '<span class="tag">' + esc(it.data.chapter) + '</span>' : "")
-      + '</div>'
-      + '<div class="stem">' + esc(it.data.stem || "（无题干）") + '</div>';
-    if (it.status === "bad"){
-      html += '<div class="imp-err">' + it.errors.map(esc).join("；") + '</div>';
-      if (it.raw) html += '<div class="imp-raw">' + esc(it.raw) + '</div>';
-    } else {
-      var lines = it.data.options.map(function(o, i){
-        var s = LETTERS[i] + "．" + esc(o);
-        return i === it.data.answer ? "<b>" + s + " ✓</b>" : s;
-      });
-      html += '<div class="imp-opts">' + lines.join("\n") + '</div>';
-      if (it.data.explanation) html += '<div class="ans">解析：' + esc(it.data.explanation) + '</div>';
-    }
-    html += '<div class="row-actions">'
-      + (it.status === "ok" ? '<button class="btn small" type="button" data-skip>' + (it.skipped ? "恢复导入" : "跳过这道") + '</button>' : "")
-      + '<button class="btn small" type="button" data-edit>编辑</button>'
-      + '<button class="btn small danger" type="button" data-remove>移除</button>'
-      + '</div>'
-      + '<div class="imp-edit"></div>';
-    item.innerHTML = html;
-
-    var editBox = item.querySelector(".imp-edit");
-    item.querySelector("[data-edit]").addEventListener("click", function(){
-      if (editBox.classList.contains("open")){ editBox.classList.remove("open"); editBox.innerHTML = ""; return; }
-      var d = it.data;
-      var subjOpts = SUBJECTS.map(function(s){
-        return '<option value="' + s.id + '"' + (sid === s.id ? " selected" : "") + '>' + s.name + '</option>';
-      }).join("");
-      var ansOpts = LETTERS.map(function(L, i){
-        return '<option value="' + i + '"' + (d.answer === i ? " selected" : "") + '>' + L + '</option>';
-      }).join("");
-      var optInputs = [0, 1, 2, 3].map(function(i){
-        return '<div class="opt-input"><span class="letter">' + LETTERS[i] + '</span>'
-          + '<input type="text" data-f="opt' + i + '" value="' + esc(d.options && d.options[i] ? d.options[i] : "") + '"></div>';
-      }).join("");
-      editBox.innerHTML =
-          '<div class="grid2">'
-        +   '<div class="field"><label>科目</label><select data-f="subject">' + subjOpts + '</select></div>'
-        +   '<div class="field"><label>章节</label><input type="text" data-f="chapter" value="' + esc(d.chapter || "") + '"></div>'
-        + '</div>'
-        + '<div class="field"><label>题干</label><textarea rows="3" data-f="stem">' + esc(d.stem || "") + '</textarea></div>'
-        + '<div class="field"><label>四个选项</label><div style="display:flex;flex-direction:column;gap:9px;">' + optInputs + '</div></div>'
-        + '<div class="field"><label>正确答案</label><select data-f="answer" style="max-width:140px;">' + ansOpts + '</select></div>'
-        + '<div class="field"><label>解析</label><textarea rows="2" data-f="expl">' + esc(d.explanation || "") + '</textarea></div>'
-        + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
-        +   '<button class="btn small primary" type="button" data-save>保存修改</button>'
-        +   '<button class="btn small ghost" type="button" data-cancel>取消</button>'
-        + '</div>';
-      editBox.classList.add("open");
-      editBox.querySelector("[data-cancel]").addEventListener("click", function(){
-        editBox.classList.remove("open"); editBox.innerHTML = "";
-      });
-      editBox.querySelector("[data-save]").addEventListener("click", function(){
-        it.data = {
-          subject: editBox.querySelector('[data-f="subject"]').value,
-          chapter: editBox.querySelector('[data-f="chapter"]').value.trim(),
-          stem: editBox.querySelector('[data-f="stem"]').value.trim(),
-          options: [0, 1, 2, 3].map(function(i){ return editBox.querySelector('[data-f="opt' + i + '"]').value.trim(); }),
-          answer: parseInt(editBox.querySelector('[data-f="answer"]').value, 10),
-          explanation: editBox.querySelector('[data-f="expl"]').value.trim()
-        };
-        refreshImpStatuses();
-        renderImpList();
-        showToast(it.status === "bad" ? "还有问题没改好，看红色提示" : it.status === "dup" ? "改好了，但和已有题重复，将跳过" : "已更新这条");
-      });
-    });
-    var skipBtn = item.querySelector("[data-skip]");
-    if (skipBtn) skipBtn.addEventListener("click", function(){
-      it.skipped = !it.skipped;
-      refreshImpStatuses();
-      renderImpList();
-    });
-    item.querySelector("[data-remove]").addEventListener("click", function(){
-      importBatch.items.splice(idx, 1);
-      refreshImpStatuses();
-      renderImpList();
-    });
-    return item;
-  }
-
-  document.getElementById("impFile").addEventListener("change", function(ev){
-    var f = ev.target.files && ev.target.files[0];
-    ev.target.value = "";
-    if (!f) return;
-    var reader = new FileReader();
-    reader.onload = function(){ handleImpText(String(reader.result || ""), "文件「" + (f.name || "未命名") + "」"); };
-    reader.onerror = function(){ impFileMsg("读取这个文件失败，换个文件或改用粘贴导入试试。", false); };
-    reader.readAsText(f);
-  });
-  document.getElementById("btnImpParse").addEventListener("click", function(){
-    var text = document.getElementById("impPaste").value;
-    if (!text.trim()){ showToast("先把题目内容粘贴到输入框里"); return; }
-    impFileMsg("", true);
-    handleImpText(text, "粘贴内容");
-  });
-  document.getElementById("btnImpClearPaste").addEventListener("click", function(){
-    document.getElementById("impPaste").value = "";
-    document.getElementById("impPaste").focus();
-  });
-  document.getElementById("btnCopyTpl").addEventListener("click", function(){
-    var text = document.getElementById("impTpl").textContent;
-    function done(){ showToast("模板已复制，粘到文档里照着填就行"); }
-    function fallback(){
-      var ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position = "fixed"; ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.select();
-      try { document.execCommand("copy"); done(); }
-      catch (e){ showToast("复制失败，长按模板文字手动复制"); }
-      document.body.removeChild(ta);
-    }
-    if (navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(text).then(done, fallback);
-    } else fallback();
-  });
-  document.getElementById("btnImpConfirm").addEventListener("click", function(){
-    if (!importBatch) return;
-    var n = 0;
-    importBatch.items.forEach(function(it){
-      if (it.status === "ok" && !it.skipped){
-        store.questions.push({
-          id: uid(), subject: subjIdFromName(it.data.subject),
-          chapter: String(it.data.chapter || "").trim(),
-          stem: String(it.data.stem || "").trim(),
-          options: it.data.options.map(function(o){ return String(o == null ? "" : o).trim(); }),
-          answer: it.data.answer,
-          explanation: String(it.data.explanation || "").trim(),
-          createdAt: Date.now()
-        });
-        n++;
-      }
-    });
-    if (!n) return;
-    save();
-    importBatch = null;
-    document.getElementById("impList").innerHTML = "";
-    document.getElementById("impSummary").textContent = "";
-    var btn = document.getElementById("btnImpConfirm");
-    btn.textContent = "确认导入"; btn.disabled = true;
-    var m = document.getElementById("impMsg");
-    m.textContent = "导入完成：新增 " + n + " 道题，题库现在共 " + store.questions.length + " 道。去刷题页就能练，或到题库页检查。";
-    m.className = "form-msg show ok";
-    renderImportHome();
-    showToast("已导入 " + n + " 道题");
-  });
-  document.getElementById("btnImpDiscard").addEventListener("click", function(){
-    importBatch = null;
-    document.getElementById("impPreviewPanel").style.display = "none";
-    document.getElementById("impList").innerHTML = "";
-    showToast("已放弃这次导入，题库没有改动");
-  });
-
   /* ---------------- 下载离线文件 ---------------- */
   function dateStamp(){
     var d = new Date();
@@ -2167,10 +1666,8 @@ D. 先增大后减小
   function downloadOffline(){
     var clone = document.documentElement.cloneNode(true);
     // 把克隆里的动态区域清回初始状态，保证下载的文件打开时干净地从本地数据渲染
-    var dyn = clone.querySelectorAll("#subjGrid,#wrongList,#libList,#qOpts,#qTags,#impList,#topicList");
+    var dyn = clone.querySelectorAll("#subjGrid,#wrongList,#libList,#qOpts,#qTags,#topicList");
     dyn.forEach(function(el){ el.innerHTML = ""; });
-    var ipp = clone.querySelector("#impPreviewPanel");
-    if (ipp) ipp.style.display = "none";
     var sp = clone.querySelector("#scratchPanel");
     if (sp) sp.setAttribute("hidden", "");
     var pc = clone.querySelector("#practiceCard");
