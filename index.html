@@ -719,28 +719,73 @@
     try { localStorage.setItem(LS_KEY, JSON.stringify(store)); }
     catch(e){ storageOK = false; showToast("浏览器本地存储不可用，本次数据可能无法保留，请导出备份"); }
   }
-  /* 联网版：从同目录 questions.json 拉取最新题，按科目+题干去重合并；离线打开拉取失败时静默保留本地题 */
+  /* 联网版：从同目录 questions.json 拉取最新题，按科目+题干去重合并；离线打开拉取失败时静默保留本地题
+     远程为准的清理：同步成功后，删除本地已失效的远程题（例如已从线上删除的 10 道旧英语阅读题），
+     但保留用户自己录的题。判断方法：远程题带有 origin="remote" 或 source/difficulty/type 等远程标记；
+     录题表单新增的题带有 origin="local"，或没有任何远程标记（只有 createdAt 等本地字段），一律保留。
+     清理只删题目本身，不动保留题目的做题记录；被删题的错题本/历史/草稿会一并清理，避免悬空引用。 */
+  function qKeyOf(subj, passageId, stem){
+    return subj + "|" + (passageId||"") + "|" + String(stem||"").replace(/\s+/g," ").trim();
+  }
+  function looksRemote(q){
+    return q.origin === "remote" || !!q.source || typeof q.difficulty === "number" || !!q.type || !!q.animation || !!q.image_svg || !!q.passage_id || !!q.passage;
+  }
   function syncRemoteQuestions(){
     if (typeof fetch !== "function") return;
     fetch("questions.json", {cache: "no-store"}).then(function(r){ if (!r.ok) throw new Error("http"); return r.json(); }).then(function(data){
       var arr = data && Array.isArray(data.questions) ? data.questions : (Array.isArray(data) ? data : []);
       if (!arr.length) return;
-      var seen = {};
-      store.questions.forEach(function(q){ seen[q.subject + "|" + (q.passage_id||"") + "|" + String(q.stem||"").replace(/\s+/g," ").trim()] = q; });
-      var added = 0, updated = 0;
+      var map = { "语文":"yuwen", "数学":"shuxue", "英语":"yingyu", "物理":"wuli", "化学":"huaxue", "生物":"shengwu" };
+      // 先算出远程题键集合（用于清理本地残留）
+      var remoteKeys = {};
       arr.forEach(function(q){
-        var subj = q.subject;
-        var map = { "语文":"yuwen", "数学":"shuxue", "英语":"yingyu", "物理":"wuli", "化学":"huaxue", "生物":"shengwu" };
-        if (map[subj]) subj = map[subj];
+        var subj = map[q.subject] || q.subject;
         var stem = String(q.question || q.stem || "").trim();
         if (!stem || !subj) return;
-        var key = subj + "|" + (q.passage_id||"") + "|" + stem.replace(/\s+/g," ").trim();
+        remoteKeys[qKeyOf(subj, q.passage_id||"", stem)] = true;
+      });
+      // 清理：本地有远程标记、且不在远程集合里的题 = 已从线上删除的旧题，删掉；
+      // origin="local" 或没有任何远程标记的题 = 用户自己录入的题，保留。
+      var purgedIds = [];
+      var kept = [];
+      store.questions.forEach(function(q){
+        var key = qKeyOf(q.subject, q.passage_id||"", q.stem);
+        if (remoteKeys[key]) { kept.push(q); return; }
+        if (q.origin === "local" || !looksRemote(q)) { kept.push(q); return; }
+        if (q.id) purgedIds.push(q.id);
+      });
+      var purged = store.questions.length - kept.length;
+      if (purged > 0){
+        store.questions = kept;
+        if (purgedIds.length){
+          store.wrongIds = store.wrongIds.filter(function(id){ return purgedIds.indexOf(id) < 0; });
+          store.history = store.history.filter(function(h){ return purgedIds.indexOf(h.qid) < 0; });
+          purgedIds.forEach(function(id){ delete store.drafts[id]; });
+        }
+      }
+      var seen = {};
+      store.questions.forEach(function(q){ seen[qKeyOf(q.subject, q.passage_id||"", q.stem)] = q; });
+      var added = 0, updated = 0;
+      arr.forEach(function(q){
+        var subj = map[q.subject] || q.subject;
+        var stem = String(q.question || q.stem || "").trim();
+        if (!stem || !subj) return;
+        var key = qKeyOf(subj, q.passage_id||"", stem);
         var ans = String(q.answer || "").trim().toUpperCase().charAt(0);
-        var rec = { subject: subj, chapter: q.chapter || "", type: q.type || "choice", stem: stem, options: (q.options||[]).slice(0,4), answer: "ABCD".indexOf(ans), answer_text: q.answer_text || "", explanation: q.explanation || "", difficulty: (q.difficulty>=1 && q.difficulty<=5) ? q.difficulty : 3, source: q.source || "generated practice", animation: q.animation || null, explanation_animation: q.explanation_animation || null, image_svg: q.image_svg || "", image_alt: q.image_alt || "", explanation_image_svg: q.explanation_image_svg || "", explanation_image_alt: q.explanation_image_alt || "", passage: q.passage || "", passage_id: q.passage_id || "", passage_title: q.passage_title || "", passage_q_index: q.passage_q_index || 0, passage_q_total: q.passage_q_total || 0 };
-        if (seen[key]){ var ex = seen[key]; ex.type=rec.type; ex.chapter=rec.chapter; ex.options=rec.options; ex.answer=rec.answer; ex.answer_text=rec.answer_text; ex.explanation=rec.explanation; ex.difficulty=rec.difficulty; ex.source=rec.source; ex.animation=rec.animation; ex.explanation_animation=rec.explanation_animation; ex.image_svg=rec.image_svg; ex.image_alt=rec.image_alt; ex.explanation_image_svg=rec.explanation_image_svg; ex.explanation_image_alt=rec.explanation_image_alt; ex.passage=rec.passage; ex.passage_id=rec.passage_id; ex.passage_title=rec.passage_title; ex.passage_q_index=rec.passage_q_index; ex.passage_q_total=rec.passage_q_total; updated++; }
+        var rec = { origin: "remote", subject: subj, chapter: q.chapter || "", type: q.type || "choice", stem: stem, options: (q.options||[]).slice(0,4), answer: "ABCD".indexOf(ans), answer_text: q.answer_text || "", explanation: q.explanation || "", difficulty: (q.difficulty>=1 && q.difficulty<=5) ? q.difficulty : 3, source: q.source || "generated practice", animation: q.animation || null, explanation_animation: q.explanation_animation || null, image_svg: q.image_svg || "", image_alt: q.image_alt || "", explanation_image_svg: q.explanation_image_svg || "", explanation_image_alt: q.explanation_image_alt || "", passage: q.passage || "", passage_id: q.passage_id || "", passage_title: q.passage_title || "", passage_q_index: q.passage_q_index || 0, passage_q_total: q.passage_q_total || 0 };
+        if (seen[key]){ var ex = seen[key]; ex.origin = "remote"; ex.type=rec.type; ex.chapter=rec.chapter; ex.options=rec.options; ex.answer=rec.answer; ex.answer_text=rec.answer_text; ex.explanation=rec.explanation; ex.difficulty=rec.difficulty; ex.source=rec.source; ex.animation=rec.animation; ex.explanation_animation=rec.explanation_animation; ex.image_svg=rec.image_svg; ex.image_alt=rec.image_alt; ex.explanation_image_svg=rec.explanation_image_svg; ex.explanation_image_alt=rec.explanation_image_alt; ex.passage=rec.passage; ex.passage_id=rec.passage_id; ex.passage_title=rec.passage_title; ex.passage_q_index=rec.passage_q_index; ex.passage_q_total=rec.passage_q_total; updated++; }
         else { rec.id = uid(); store.questions.push(rec); seen[key]=rec; added++; }
       });
-      if (added || updated){ save(); if (currentView === "home") renderHome(); if (currentView === "topics") renderTopics(); }
+      if (added || updated || purged > 0){
+        save();
+        if (purged > 0 && typeof showToast === "function") showToast("已清理 " + purged + " 道已从线上删除的旧题，你自己录的题不受影响");
+        if (currentView === "home") renderHome();
+        if (currentView === "topics") renderTopics();
+        if (currentView === "practice" || currentView === "library" || currentView === "wrong"){
+          try { renderPracticeSetup && renderPracticeSetup(); } catch(e){}
+          try { renderLibrary && renderLibrary(); } catch(e){}
+        }
+      }
     }).catch(function(){});
   }
   function esc(s){
@@ -1606,7 +1651,7 @@
     for (var i=0;i<4;i++) if (!options[i]) return formMsg("选项 " + LETTERS[i] + " 还没填，四个选项都要有内容。", false);
     if (formAnswer < 0) return formMsg("还没选正确答案，点一下 A / B / C / D。", false);
     store.questions.push({
-      id: uid(), subject: subject, chapter: chapter, stem: stem,
+      id: uid(), origin: "local", subject: subject, chapter: chapter, stem: stem,
       options: options, answer: formAnswer, explanation: expl, createdAt: Date.now()
     });
     save();
