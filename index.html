@@ -1,0 +1,1963 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:,">
+<title>高中刷题库 · 离线版</title>
+<style>
+  :root{
+    color-scheme: light;
+    --bg:#f6f5f1;
+    --surface:#ffffff;
+    --surface2:#efeee8;
+    --ink:#1c1b17;
+    --ink2:#5c594f;
+    --ink3:#8a867a;
+    --line:#e3e0d5;
+    --accent:#b5462a;
+    --accent-ink:#ffffff;
+    --ok:#1e7d4f;
+    --ok-bg:#e6f3ec;
+    --bad:#c0392b;
+    --bad-bg:#fbeae7;
+    --warn-bg:#fdf3e0;
+    --warn-ink:#8a5a12;
+    --radius:14px;
+    --radius-s:9px;
+    --shadow:0 1px 2px rgba(28,27,23,.05),0 6px 20px rgba(28,27,23,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      color-scheme: dark;
+      --bg:#161513;
+      --surface:#201f1c;
+      --surface2:#2a2925;
+      --ink:#ece9e1;
+      --ink2:#b3afa3;
+      --ink3:#7f7b70;
+      --line:#35332d;
+      --accent:#e0684a;
+      --accent-ink:#ffffff;
+      --ok:#4cc084;
+      --ok-bg:#173527;
+      --bad:#f0766a;
+      --bad-bg:#3d201c;
+      --warn-bg:#3a2e14;
+      --warn-ink:#e8bc6a;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);
+    }
+  }
+  html{box-sizing:border-box;}
+  *,*::before,*::after{box-sizing:inherit;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:104px;
+  }
+  @media (max-width:640px){
+    .top-in{flex-wrap:wrap;row-gap:8px;}
+    .top-actions{width:100%;margin-left:0;}
+    .top-actions .btn{flex:1;justify-content:center;padding:7px 10px;font-size:13.5px;}
+    .brand h1{font-size:20px;}
+    .offline-badge{font-size:11px;padding:2px 7px;}
+    main{padding-top:14px;}
+    .hero{padding-bottom:12px;}
+    .hero h2{font-size:25px;}
+    .stat-strip{grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:16px;}
+    .stat{padding:9px 8px;}
+    .stat .num{font-size:19px;}
+    .stat .lab{font-size:11px;line-height:1.3;}
+    .sec-head{margin:18px 0 10px;}
+    .subj{padding:13px;}
+  }
+  @media (min-width:860px){ body{padding-bottom:0;} }
+  h1,h2,h3,p,ul,ol,figure{margin:0;}
+  button{font:inherit;cursor:pointer;}
+  input,select,textarea{font:inherit;color:var(--ink);}
+  a{color:var(--accent);}
+
+  .wrap{max-width:980px;margin:0 auto;padding:0 18px;}
+
+  /* ---------- header ---------- */
+  header.top{
+    position:sticky;top:0;z-index:40;
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .top-in{display:flex;align-items:center;gap:14px;padding:13px 0 11px;}
+  .brand{display:flex;align-items:baseline;gap:10px;min-width:0;}
+  .brand h1{
+    font-family:"Songti SC","STSong","SimSun",serif;
+    font-size:23px;font-weight:700;letter-spacing:.02em;white-space:nowrap;
+  }
+  .offline-badge{
+    flex:none;font-size:12px;font-weight:600;color:var(--ok);
+    background:var(--ok-bg);border:1px solid color-mix(in srgb, var(--ok) 30%, transparent);
+    padding:2px 9px;border-radius:999px;white-space:nowrap;
+  }
+  .top-actions{margin-left:auto;display:flex;gap:8px;flex:none;}
+  .btn{
+    appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);
+    padding:8px 14px;border-radius:999px;font-size:14px;font-weight:600;line-height:1.2;
+    display:inline-flex;align-items:center;gap:6px;text-decoration:none;
+  }
+  .btn:active{transform:scale(.98);}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+  .btn.ghost{background:transparent;}
+  .btn.small{padding:6px 11px;font-size:13px;}
+  .btn.danger{color:var(--bad);border-color:color-mix(in srgb, var(--bad) 40%, var(--line));}
+  .btn:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+
+  nav.tabs{display:none;}
+  @media (min-width:860px){
+    nav.tabs{display:flex;gap:4px;padding:0 0 10px;}
+    nav.tabs button{
+      border:0;background:transparent;color:var(--ink2);padding:7px 14px;border-radius:999px;
+      font-size:15px;font-weight:600;
+    }
+    nav.tabs button.on{background:var(--ink);color:var(--bg);}
+  }
+  nav.bottombar{
+    position:fixed;left:0;right:0;bottom:0;z-index:40;
+    background:color-mix(in srgb, var(--surface) 94%, transparent);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    border-top:1px solid var(--line);
+    display:flex;padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+  }
+  nav.bottombar button{
+    flex:1;border:0;background:transparent;color:var(--ink3);
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:6px 2px;border-radius:10px;font-size:11.5px;font-weight:600;
+  }
+  nav.bottombar button svg{width:21px;height:21px;}
+  nav.bottombar button.on{color:var(--accent);}
+  @media (min-width:860px){ nav.bottombar{display:none;} }
+
+  main{padding:22px 0 40px;}
+  .view{display:none;}
+  .view.on{display:block;}
+
+  /* ---------- home ---------- */
+  .hero{padding:6px 0 20px;}
+  .hero h2{
+    font-family:"Songti SC","STSong","SimSun",serif;
+    font-size:clamp(26px,4.5vw,36px);line-height:1.25;font-weight:700;max-width:16em;
+  }
+  .hero p{color:var(--ink2);margin-top:8px;max-width:38em;font-size:15px;}
+  .hero .dl-row{margin-top:16px;display:flex;flex-wrap:wrap;gap:9px;align-items:center;}
+  .hero .dl-note{font-size:13px;color:var(--ink3);}
+
+  .stat-strip{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:4px 0 22px;
+  }
+  @media (min-width:700px){ .stat-strip{grid-template-columns:repeat(4,1fr);} }
+  .stat{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 16px;box-shadow:var(--shadow);
+  }
+  .stat .num{font-size:26px;font-weight:750;line-height:1.1;font-variant-numeric:tabular-nums;}
+  .stat .lab{font-size:13px;color:var(--ink2);margin-top:3px;}
+
+  .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:26px 0 12px;}
+  .sec-head h3{font-size:18px;font-weight:700;}
+  .sec-head span{font-size:13px;color:var(--ink3);}
+
+  .subj-grid{display:grid;grid-template-columns:1fr;gap:12px;}
+  @media (min-width:620px){ .subj-grid{grid-template-columns:1fr 1fr;} }
+  @media (min-width:980px){ .subj-grid{grid-template-columns:1fr 1fr 1fr;} }
+  .subj{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;
+  }
+  .subj-top{display:flex;align-items:center;gap:11px;}
+  .subj-dot{
+    width:40px;height:40px;flex:none;border-radius:11px;display:grid;place-items:center;
+    font-family:"Songti SC","STSong",serif;font-size:19px;font-weight:700;color:#fff;
+  }
+  .subj-name{font-size:17px;font-weight:700;}
+  .subj-sub{font-size:12.5px;color:var(--ink3);}
+  .subj-meta{display:flex;gap:14px;font-size:13px;color:var(--ink2);flex-wrap:wrap;}
+  .subj-meta b{color:var(--ink);font-variant-numeric:tabular-nums;}
+  .bar{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;}
+  .bar i{display:block;height:100%;background:var(--ok);border-radius:99px;transition:width .3s;}
+  .subj-foot{display:flex;gap:8px;margin-top:auto;}
+  .subj-foot .btn{flex:1;justify-content:center;}
+  .empty-hint{font-size:13px;color:var(--ink3);background:var(--surface2);border-radius:var(--radius-s);padding:8px 11px;}
+
+  /* ---------- generic panels ---------- */
+  .panel{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px;box-shadow:var(--shadow);
+  }
+  .panel + .panel{margin-top:14px;}
+  .panel h3{font-size:17px;font-weight:700;margin-bottom:6px;}
+  .panel .desc{font-size:14px;color:var(--ink2);}
+  .empty-state{
+    text-align:center;padding:38px 20px;color:var(--ink2);
+    border:1.5px dashed var(--line);border-radius:var(--radius);background:var(--surface);
+  }
+  .empty-state .big{font-family:"Songti SC","STSong",serif;font-size:20px;color:var(--ink);font-weight:700;margin-bottom:6px;}
+  .empty-state p{font-size:14px;max-width:30em;margin:0 auto 14px;}
+
+  /* ---------- practice ---------- */
+  .setup-row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;}
+  .field{display:flex;flex-direction:column;gap:5px;}
+  .field label{font-size:13px;font-weight:600;color:var(--ink2);}
+  .field select,.field input[type="text"],.field textarea{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-s);
+    padding:9px 11px;font-size:15px;min-height:42px;
+  }
+  .field textarea{line-height:1.5;resize:vertical;}
+  .q-progress{display:flex;align-items:center;gap:12px;margin-bottom:14px;font-size:13.5px;color:var(--ink2);}
+  .q-progress .bar{flex:1;}
+  .q-progress .bar i{background:var(--accent);}
+  .q-tags{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;}
+  .tag{font-size:12px;font-weight:600;padding:2.5px 9px;border-radius:999px;background:var(--surface2);color:var(--ink2);}
+  .tag.subj{color:#fff;}
+  .q-stem{font-size:17.5px;line-height:1.65;font-weight:550;white-space:pre-wrap;word-break:break-word;}
+  .opts{display:flex;flex-direction:column;gap:9px;margin-top:16px;}
+  .opt{
+    display:flex;gap:11px;align-items:flex-start;text-align:left;width:100%;
+    background:var(--surface);border:1.5px solid var(--line);border-radius:var(--radius-s);
+    padding:12px 14px;font-size:15.5px;line-height:1.5;color:var(--ink);
+  }
+  .opt .letter{
+    flex:none;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);
+    display:grid;place-items:center;font-size:13.5px;font-weight:700;margin-top:1px;
+  }
+  .opt .otext{white-space:pre-wrap;word-break:break-word;}
+  .opt:not(:disabled):active{border-color:var(--ink3);}
+  .opt.picked{border-color:var(--accent);}
+  .opt.picked .letter{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .opt.right{border-color:var(--ok);background:var(--ok-bg);}
+  .opt.right .letter{background:var(--ok);border-color:var(--ok);color:#fff;}
+  .opt.wrong{border-color:var(--bad);background:var(--bad-bg);}
+  .opt.wrong .letter{background:var(--bad);border-color:var(--bad);color:#fff;}
+  .opt:disabled{cursor:default;opacity:1;}
+  .verdict{margin-top:16px;border-radius:var(--radius-s);padding:13px 15px;font-size:14.5px;line-height:1.6;display:none;}
+  .verdict.show{display:block;}
+  .verdict.ok{background:var(--ok-bg);}
+  .verdict.bad{background:var(--bad-bg);}
+  .verdict .vt{font-weight:750;margin-bottom:3px;}
+  .verdict .expl{color:var(--ink2);white-space:pre-wrap;}
+  .q-actions{display:flex;gap:9px;margin-top:16px;flex-wrap:wrap;}
+  .q-actions .spacer{flex:1;}
+  .result-box{text-align:center;padding:12px 6px 4px;}
+  .result-box .score{font-size:44px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .result-box p{color:var(--ink2);font-size:14.5px;margin:6px 0 16px;}
+
+  /* ---------- 草稿板（Apple Pencil） ---------- */
+  #practiceCard{display:none;}
+  #practiceCard.showcard{display:grid;grid-template-columns:minmax(0,1fr);gap:0;
+    grid-template-areas:"prog" "stem" "scratch" "ans";}
+  #practiceCard .q-progress{grid-area:prog;}
+  .q-stemwrap{grid-area:stem;min-width:0;}
+  .q-answer{grid-area:ans;min-width:0;}
+  .scratch{grid-area:scratch;min-width:0;}
+  @media (min-width:1024px){
+    #practiceCard.showcard.has-scratch{grid-template-columns:minmax(0,1fr) 372px;column-gap:20px;
+      grid-template-rows:auto auto 1fr;
+      grid-template-areas:"prog prog" "stem scratch" "ans scratch";}
+    #practiceCard.showcard.has-scratch .q-answer{align-self:start;}
+    .scratch{position:sticky;top:118px;align-self:start;}
+  }
+  .scratch{
+    margin-top:16px;border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--surface2);padding:12px;
+  }
+  @media (min-width:1024px){ .scratch{margin-top:0;} }
+  .scratch-head{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:10px;}
+  .scratch-title{font-size:15.5px;font-weight:750;}
+  .draft-state{font-size:12.5px;color:var(--ink3);}
+  .draft-state.has{color:var(--ok);font-weight:600;}
+  .scratch-tools{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:8px;}
+  .tool-btn{
+    border:1.5px solid var(--line);background:var(--surface);color:var(--ink);
+    padding:7px 12px;border-radius:999px;font-size:13.5px;font-weight:600;line-height:1.15;
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .tool-btn.on{border-color:var(--accent);background:var(--accent);color:var(--accent-ink);}
+  .tool-btn.warn-confirm{border-color:var(--bad);color:var(--bad);}
+  .swatch{
+    width:30px;height:30px;border-radius:50%;border:2px solid var(--line);padding:0;flex:none;
+    display:grid;place-items:center;background:var(--surface);
+  }
+  .swatch i{width:16px;height:16px;border-radius:50%;display:block;}
+  .swatch.on{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);}
+  .scratch-mode{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+  .scratch-mode .mode-lab{font-size:12.5px;color:var(--ink2);font-weight:600;}
+  .seg{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;overflow:hidden;background:var(--surface);}
+  .seg button{border:0;background:transparent;color:var(--ink2);padding:6px 12px;font-size:13px;font-weight:600;}
+  .seg button.on{background:var(--ink);color:var(--bg);}
+  .pen-status{font-size:12.5px;color:var(--ink3);}
+  .pen-status b{color:var(--ink2);}
+  .canvas-wrap{
+    border-radius:10px;overflow:hidden;border:1px solid #ddd6c4;
+    background-color:#fffdf4;
+    background-image:
+      linear-gradient(rgba(70,90,140,.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(70,90,140,.07) 1px, transparent 1px);
+    background-size:26px 26px;
+  }
+  #scratchCanvas{display:block;width:100%;height:auto;touch-action:none;cursor:crosshair;}
+  .scratch-note{font-size:12.5px;color:var(--ink3);margin-top:9px;line-height:1.55;}
+
+  /* ---------- wrong book / library ---------- */
+  .group-title{display:flex;align-items:center;gap:9px;margin:22px 0 10px;font-size:16px;font-weight:700;}
+  .group-title .count{font-size:12.5px;color:var(--ink3);font-weight:600;}
+  .group-title .btn{margin-left:auto;}
+  .qitem{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 16px;margin-bottom:9px;box-shadow:var(--shadow);
+  }
+  .qitem .stem{font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word;}
+  .qitem .meta{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:7px;align-items:center;}
+  .qitem .ans{font-size:13.5px;color:var(--ink2);margin-top:8px;}
+  .qitem .ans b{color:var(--ok);}
+  .qitem .row-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+
+  /* ---------- form ---------- */
+  form.qform{display:flex;flex-direction:column;gap:14px;}
+  .grid2{display:grid;grid-template-columns:1fr;gap:14px;}
+  @media (min-width:680px){ .grid2{grid-template-columns:1fr 1fr;} }
+  .opt-input{display:flex;gap:9px;align-items:center;}
+  .opt-input .letter{
+    flex:none;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);
+    display:grid;place-items:center;font-weight:700;font-size:14px;
+  }
+  .opt-input input{flex:1;min-width:0;}
+  .answer-pick{display:flex;gap:8px;flex-wrap:wrap;}
+  .answer-pick button{
+    width:44px;height:44px;border-radius:50%;border:1.5px solid var(--line);
+    background:var(--surface);font-weight:700;font-size:15px;color:var(--ink);
+  }
+  .answer-pick button.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .form-msg{font-size:14px;border-radius:var(--radius-s);padding:10px 13px;display:none;}
+  .form-msg.show{display:block;}
+  .form-msg.ok{background:var(--ok-bg);color:var(--ink);}
+  .form-msg.bad{background:var(--bad-bg);color:var(--ink);}
+  .warn-note{
+    background:var(--warn-bg);color:var(--warn-ink);border-radius:var(--radius-s);
+    padding:11px 14px;font-size:13.5px;line-height:1.6;
+  }
+  .steps{counter-reset:st;display:flex;flex-direction:column;gap:9px;font-size:14.5px;color:var(--ink2);}
+  .steps div{display:flex;gap:10px;}
+  .steps b{
+    counter-increment:st;flex:none;width:22px;height:22px;border-radius:50%;
+    background:var(--surface2);color:var(--ink);display:grid;place-items:center;font-size:12.5px;
+  }
+  .steps b::before{content:counter(st);}
+  /* ---------- 导入题目 ---------- */
+  .tpl{
+    background:var(--surface2);border:1px solid var(--line);border-radius:var(--radius-s);
+    padding:13px 15px;font-size:13.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  .imp-status{font-size:12px;font-weight:700;padding:2.5px 9px;border-radius:999px;white-space:nowrap;}
+  .imp-status.ok{background:var(--ok-bg);color:var(--ok);}
+  .imp-status.bad{background:var(--bad-bg);color:var(--bad);}
+  .imp-status.dup{background:var(--warn-bg);color:var(--warn-ink);}
+  .imp-status.skip{background:var(--surface2);color:var(--ink3);}
+  .imp-err{font-size:13.5px;color:var(--bad);margin-top:7px;line-height:1.55;}
+  .imp-opts{font-size:13.5px;color:var(--ink2);margin-top:7px;line-height:1.65;white-space:pre-wrap;word-break:break-word;}
+  .imp-opts b{color:var(--ok);}
+  .imp-raw{
+    font-size:12.5px;color:var(--ink3);white-space:pre-wrap;word-break:break-word;
+    margin-top:7px;max-height:110px;overflow:hidden;
+  }
+  .imp-edit{margin-top:12px;border-top:1.5px dashed var(--line);padding-top:13px;display:none;}
+  .imp-edit.open{display:flex;flex-direction:column;gap:12px;}
+
+  .toast{
+    position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(16px);
+    background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;font-weight:600;
+    opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:88vw;text-align:center;
+  }
+  @media (min-width:860px){ .toast{bottom:28px;} }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  footer.foot{padding:6px 0 26px;color:var(--ink3);font-size:12.5px;text-align:center;}
+
+  /* 手机端收紧（放在最后，避免被前面的基础规则覆盖） */
+  @media (max-width:640px){
+    .stat-strip{grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:16px;}
+    .stat{padding:9px 8px;}
+    .stat .num{font-size:19px;}
+    .stat .lab{font-size:11px;line-height:1.3;}
+  }
+  /* 滚动停稳时不被底部固定导航遮住 */
+  .subj,.qitem,.panel,button.btn,nav.bottombar{scroll-margin-bottom:120px;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="top-in">
+      <div class="brand">
+        <h1>高中刷题库</h1>
+        <span class="offline-badge">离线版 · 无需联网</span>
+      </div>
+      <div class="top-actions">
+        <button class="btn primary" id="btnDownloadTop" type="button">⬇ 下载到 iPad</button>
+      </div>
+    </div>
+    <nav class="tabs" id="tabsTop" aria-label="主导航"></nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ================= 首页 ================= -->
+  <section class="view" id="view-home">
+    <div class="hero">
+      <h2>六科题库都在这儿，<br>录一道，刷一道。</h2>
+      <p>这是一个完全离线的单文件题库：题目、做题记录和错题本都存在这台设备的浏览器里，不联网、不登录也能用。今晚先把架子搭好，之后从练习册和试卷上慢慢往里填题。</p>
+      <div class="dl-row">
+        <button class="btn primary" id="btnDownloadHero" type="button">⬇ 下载离线文件到 iPad</button>
+        <button class="btn" id="btnGoAdd" type="button">＋ 录第一道题</button>
+        <span class="dl-note">下载后在「文件」App 里点开就能用</span>
+      </div>
+    </div>
+
+    <div class="stat-strip">
+      <div class="stat"><div class="num" id="stTotal">0</div><div class="lab">题库总题数</div></div>
+      <div class="stat"><div class="num" id="stDone">0</div><div class="lab">累计作答</div></div>
+      <div class="stat"><div class="num" id="stAcc">—</div><div class="lab">总正确率</div></div>
+      <div class="stat"><div class="num" id="stWrong">0</div><div class="lab">错题本待重练</div></div>
+    </div>
+
+    <div class="sec-head"><h3>六个科目</h3><span>点「开始刷题」直接进入该科练习</span></div>
+    <div class="subj-grid" id="subjGrid"></div>
+
+    <div class="sec-head"><h3>在 iPad 上离线使用</h3></div>
+    <div class="panel">
+      <div class="steps">
+        <div><b></b><span>点上方「下载离线文件」，把 <b style="all:unset;font-weight:700;color:var(--ink)">高中刷题库-离线版.html</b> 存到 iPad 的「文件」App 里。</span></div>
+        <div><b></b><span>以后直接在「文件」里点开它刷题，全程不用联网、不用梯子。</span></div>
+        <div><b></b><span>题目和记录存在打开它的浏览器本地；换浏览器或清缓存会丢，记得在「题库与备份」里定期导出一份 JSON 备份。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 刷题 ================= -->
+  <section class="view" id="view-practice">
+    <div class="sec-head" style="margin-top:2px;"><h3>刷题</h3><span id="practiceHint"></span></div>
+
+    <div class="panel" id="practiceSetup">
+      <div class="setup-row">
+        <div class="field">
+          <label for="pfSubject">科目</label>
+          <select id="pfSubject"></select>
+        </div>
+        <div class="field">
+          <label for="pfChapter">章节</label>
+          <select id="pfChapter"><option value="">全部章节</option></select>
+        </div>
+        <div class="field">
+          <label for="pfOrder">出题顺序</label>
+          <select id="pfOrder">
+            <option value="seq">按录入顺序</option>
+            <option value="rand">随机打乱</option>
+          </select>
+        </div>
+        <button class="btn primary" id="btnStartPractice" type="button">开始刷题</button>
+      </div>
+      <p class="desc" style="margin-top:12px;">选题后立即判对错并显示解析；答错的题会自动收进错题本。做题时可打开草稿板，用 Apple Pencil 边看题边打草稿，草稿按题保存在本机。</p>
+    </div>
+
+    <div class="panel" id="practiceEmpty" style="display:none;">
+      <div class="empty-state" style="border:0;padding:16px 6px;">
+        <div class="big">这个范围里还没有题</div>
+        <p>先去录题页把练习册、试卷上的题录进来，这里就能开始刷了。</p>
+        <button class="btn primary" type="button" data-goto="add">去录题</button>
+      </div>
+    </div>
+
+    <div class="panel" id="practiceCard">
+      <div class="q-progress">
+        <span id="qPos">第 1 题</span>
+        <div class="bar"><i id="qBar" style="width:0%"></i></div>
+        <span id="qScore">对 0 · 错 0</span>
+      </div>
+      <div class="q-stemwrap">
+        <div class="q-tags" id="qTags"></div>
+        <div class="q-stem" id="qStem"></div>
+      </div>
+
+      <aside class="scratch" id="scratchPanel" hidden aria-label="草稿板">
+        <div class="scratch-head">
+          <span class="scratch-title">✎ 草稿纸</span>
+          <span class="draft-state" id="draftState">本题暂无草稿</span>
+        </div>
+        <div class="scratch-tools" role="group" aria-label="草稿工具">
+          <button class="tool-btn on" id="toolPen" type="button">画笔</button>
+          <button class="tool-btn" id="toolEraser" type="button">橡皮擦</button>
+          <button class="swatch on" type="button" data-color="#23201b" aria-label="黑色"><i style="background:#23201b"></i></button>
+          <button class="swatch" type="button" data-color="#d43a2f" aria-label="红色"><i style="background:#d43a2f"></i></button>
+          <button class="swatch" type="button" data-color="#2456c8" aria-label="蓝色"><i style="background:#2456c8"></i></button>
+          <button class="tool-btn" id="toolUndo" type="button">撤销一笔</button>
+          <button class="tool-btn" id="toolClear" type="button">清空</button>
+        </div>
+        <div class="scratch-mode">
+          <span class="mode-lab">书写方式</span>
+          <span class="seg" role="group" aria-label="书写方式">
+            <button type="button" id="modePenOnly" class="on">仅用笔书写</button>
+            <button type="button" id="modeAll">手指也能画</button>
+          </span>
+          <span class="pen-status" id="penStatus">等你落笔…</span>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="scratchCanvas" width="720" height="900"></canvas>
+        </div>
+        <p class="scratch-note">草稿按题目单独保存：切到下一题再回来，这道题的草稿还在。书写时页面不会滚动；开着「仅用笔书写」时手指触碰会被忽略，手掌搭在屏幕上也不会误画。</p>
+      </aside>
+
+      <div class="q-answer">
+        <div class="opts" id="qOpts"></div>
+        <div class="verdict" id="qVerdict"></div>
+        <div class="q-actions">
+          <button class="btn ghost" id="btnQuitPractice" type="button">结束本次</button>
+          <button class="btn" id="btnScratch" type="button" aria-expanded="false">✎ 打开草稿板</button>
+          <span class="spacer"></span>
+          <button class="btn primary" id="btnNextQ" type="button" style="display:none;">下一题 →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="practiceResult" style="display:none;">
+      <div class="result-box">
+        <div class="score" id="resScore">0 / 0</div>
+        <p id="resText"></p>
+        <div style="display:flex;gap:9px;justify-content:center;flex-wrap:wrap;">
+          <button class="btn primary" id="btnAgain" type="button">再刷一轮</button>
+          <button class="btn" type="button" data-goto="wrong">去看错题本</button>
+          <button class="btn ghost" type="button" data-goto="home">回首页</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 错题本 ================= -->
+  <section class="view" id="view-wrong">
+    <div class="sec-head" style="margin-top:2px;"><h3>错题本</h3><span id="wrongHint"></span></div>
+    <div id="wrongList"></div>
+  </section>
+
+  <!-- ================= 录题 ================= -->
+  <section class="view" id="view-add">
+    <div class="sec-head" style="margin-top:2px;"><h3>录题</h3><span>录完直接存进对应科目，可连续录入</span></div>
+    <div class="panel">
+      <form class="qform" id="addForm" novalidate>
+        <div class="grid2">
+          <div class="field">
+            <label for="afSubject">科目 *</label>
+            <select id="afSubject"></select>
+          </div>
+          <div class="field">
+            <label for="afChapter">章节（选填，如：必修一 · 函数）</label>
+            <input type="text" id="afChapter" placeholder="例如：集合与常用逻辑用语" maxlength="60">
+          </div>
+        </div>
+        <div class="field">
+          <label for="afStem">题干 *</label>
+          <textarea id="afStem" rows="4" placeholder="把题目原文抄进来，公式可以用文字或符号写明"></textarea>
+        </div>
+        <div class="field">
+          <label>四个选项 *</label>
+          <div style="display:flex;flex-direction:column;gap:9px;">
+            <div class="opt-input"><span class="letter">A</span><input type="text" id="afOpt0" placeholder="选项 A"></div>
+            <div class="opt-input"><span class="letter">B</span><input type="text" id="afOpt1" placeholder="选项 B"></div>
+            <div class="opt-input"><span class="letter">C</span><input type="text" id="afOpt2" placeholder="选项 C"></div>
+            <div class="opt-input"><span class="letter">D</span><input type="text" id="afOpt3" placeholder="选项 D"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>正确答案 *</label>
+          <div class="answer-pick" id="afAnswerPick">
+            <button type="button" data-ans="0">A</button>
+            <button type="button" data-ans="1">B</button>
+            <button type="button" data-ans="2">C</button>
+            <button type="button" data-ans="3">D</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="afExpl">解析（选填）</label>
+          <textarea id="afExpl" rows="3" placeholder="为什么选这个答案？写下关键步骤，复习时最有用"></textarea>
+        </div>
+        <div class="form-msg" id="addMsg"></div>
+        <div style="display:flex;gap:9px;flex-wrap:wrap;">
+          <button class="btn primary" type="submit">保存这道题</button>
+          <button class="btn" type="button" id="btnClearForm">清空重填</button>
+        </div>
+      </form>
+    </div>
+    <div class="panel">
+      <h3>小提示</h3>
+      <p class="desc">抄题时把图、表用文字描述清楚（比如「函数图像过点 (0,1)」）；录完可以在「题库与备份」里检查、删除录错的题。坚持按章节录，之后刷题时就能按章节专项练。</p>
+    </div>
+  </section>
+
+  <!-- ================= 导入题目 ================= -->
+  <section class="view" id="view-import">
+    <div class="sec-head" style="margin-top:2px;"><h3>导入题目</h3><span id="impHint"></span></div>
+
+    <div class="panel">
+      <h3>从「文件」里选文档导入</h3>
+      <p class="desc" style="margin-bottom:12px;">支持 .json、.md、.txt 三种文件。先把题目文档存到 iPad 的「文件」里（iCloud 云盘或本机都行），再点下面按钮选取——文档只在这台设备上解析，不上传、不联网。解析后先出预览清单，确认了才入库。</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <label class="btn primary" for="impFile" style="margin:0;">⬆ 从文件选取</label>
+        <input type="file" id="impFile" accept=".json,.md,.markdown,.txt,application/json,text/plain,text/markdown" style="display:none;">
+        <div class="field">
+          <label for="impDefaultSubject">题目里没写科目时，默认归到</label>
+          <select id="impDefaultSubject">
+            <option value="">不指定（缺科目会报错）</option>
+            <option value="yuwen">语文</option>
+            <option value="shuxue">数学</option>
+            <option value="yingyu">英语</option>
+            <option value="wuli">物理</option>
+            <option value="huaxue">化学</option>
+            <option value="shengwu">生物</option>
+          </select>
+        </div>
+      </div>
+      <div class="warn-note" style="margin-top:13px;">Word（.docx）和 PDF 不能直接导入：先在「文件」里用 Pages / Word 打开，把内容复制出来，或导出成纯文本，再按下方模板整理成 .md / .txt，或直接用粘贴导入。图片题、复杂公式题先按纯文本处理，公式用文字写明。</div>
+      <div class="form-msg" id="impFileMsg" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="panel">
+      <h3>粘贴导入</h3>
+      <p class="desc" style="margin-bottom:10px;">文件打不开、格式乱时兜底用：把文档内容复制下来粘到这里，点「解析预览」，和文件导入走同一套解析与预览。</p>
+      <div class="field">
+        <textarea id="impPaste" rows="8" placeholder="把题目文本粘贴到这里，按下方模板的格式：一道题一段，用 --- 分隔"></textarea>
+      </div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:12px;">
+        <button class="btn primary" id="btnImpParse" type="button">解析预览</button>
+        <button class="btn ghost" id="btnImpClearPaste" type="button">清空输入框</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>纯文本模板</h3>
+      <p class="desc" style="margin-bottom:10px;">一道题一段，用一行 --- 分隔；字段名用中文加冒号，四个选项以 A. B. C. D. 开头，答案写字母。JSON 文件用同样几个字段：subject、chapter、question、options、answer、explanation，其中 answer 写字母最稳（如 "B"）。</p>
+      <pre class="tpl" id="impTpl">科目：物理
+章节：牛顿运动定律
+题目：一个物体在光滑水平面上受恒力 F 作用，由静止开始运动，则它的加速度（　）
+A. 随时间均匀增大
+B. 保持不变
+C. 随速度增大而减小
+D. 先增大后减小
+答案：B
+解析：合力恒定，由牛顿第二定律 a = F/m，加速度保持不变。
+---</pre>
+      <div style="margin-top:10px;">
+        <button class="btn small" id="btnCopyTpl" type="button">复制模板</button>
+      </div>
+    </div>
+
+    <div class="panel" id="impPreviewPanel" style="display:none;">
+      <h3>导入预览</h3>
+      <p class="desc" id="impSummary"></p>
+      <div id="impList" style="margin-top:12px;"></div>
+      <div class="form-msg" id="impMsg" style="margin-top:12px;"></div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:14px;">
+        <button class="btn primary" id="btnImpConfirm" type="button">确认导入</button>
+        <button class="btn ghost" id="btnImpDiscard" type="button">放弃这次导入</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 题库与备份 ================= -->
+  <section class="view" id="view-library">
+    <div class="sec-head" style="margin-top:2px;"><h3>题库与备份</h3><span id="libHint"></span></div>
+
+    <div class="panel">
+      <h3>备份与恢复</h3>
+      <p class="desc" style="margin-bottom:12px;">离线版的数据只存在这台设备上。导出一份 JSON 备份存到「文件」或 iCloud，换设备、清缓存后导入即可恢复全部题目、记录、错题本和每道题的草稿。</p>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;">
+        <button class="btn primary" id="btnExport" type="button">⬇ 导出题库备份（JSON）</button>
+        <label class="btn" for="importFile" style="margin:0;">⬆ 导入备份</label>
+        <input type="file" id="importFile" accept=".json,application/json" style="display:none;">
+        <button class="btn" id="btnDownloadLib" type="button">⬇ 再下载一份离线文件</button>
+        <button class="btn" type="button" data-goto="import">⬆ 批量导入题目（文件 / 粘贴）</button>
+      </div>
+      <div class="form-msg" id="libMsg" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="panel">
+      <div class="setup-row">
+        <div class="field">
+          <label for="libSubject">按科目看</label>
+          <select id="libSubject"></select>
+        </div>
+        <div class="field" style="flex:1;min-width:180px;">
+          <label for="libSearch">搜题干关键词</label>
+          <input type="text" id="libSearch" placeholder="输入关键词筛选">
+        </div>
+      </div>
+    </div>
+    <div id="libList"></div>
+
+    <div class="panel">
+      <h3>危险区</h3>
+      <p class="desc" style="margin-bottom:12px;">清空会删掉全部题目、做题记录和错题本，删前请先导出备份。</p>
+      <button class="btn danger" id="btnWipe" type="button">清空全部数据</button>
+      <div class="form-msg" id="wipeMsg" style="margin-top:12px;"></div>
+    </div>
+  </section>
+
+  <footer class="foot">高中刷题库 · 离线版 —— 单个 HTML 文件，不联网也能用；数据保存在本机浏览器中。</footer>
+</main>
+
+<nav class="bottombar" id="tabsBottom" aria-label="主导航"></nav>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- 常量与状态 ---------------- */
+  var SUBJECTS = [
+    { id:"yuwen",   name:"语文", color:"#c0392b" },
+    { id:"shuxue",  name:"数学", color:"#2563eb" },
+    { id:"yingyu",  name:"英语", color:"#0e7a6d" },
+    { id:"wuli",    name:"物理", color:"#d97706" },
+    { id:"huaxue",  name:"化学", color:"#0891b2" },
+    { id:"shengwu", name:"生物", color:"#5f9e1d" }
+  ];
+  var LETTERS = ["A","B","C","D"];
+  var LS_KEY = "gaozhong_offline_tiku_v1";
+
+  var store = { questions: [], history: [], wrongIds: [], drafts: {} };
+  var storageOK = true;
+
+  function subjById(id){
+    for (var i=0;i<SUBJECTS.length;i++) if (SUBJECTS[i].id===id) return SUBJECTS[i];
+    return SUBJECTS[0];
+  }
+  function uid(){
+    return "q" + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  }
+  function load(){
+    try {
+      var raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        var d = JSON.parse(raw);
+        if (d && Array.isArray(d.questions)) store.questions = d.questions;
+        if (d && Array.isArray(d.history)) store.history = d.history;
+        if (d && Array.isArray(d.wrongIds)) store.wrongIds = d.wrongIds;
+        if (d && d.drafts && typeof d.drafts === "object") store.drafts = d.drafts;
+      }
+    } catch(e){ storageOK = false; }
+  }
+  function save(){
+    if (!storageOK) return;
+    try { localStorage.setItem(LS_KEY, JSON.stringify(store)); }
+    catch(e){ storageOK = false; showToast("浏览器本地存储不可用，本次数据可能无法保留，请导出备份"); }
+  }
+  /* 联网版：从同目录 questions.json 拉取最新题，按科目+题干去重合并；离线打开拉取失败时静默保留本地题 */
+  function syncRemoteQuestions(){
+    if (typeof fetch !== "function") return;
+    fetch("questions.json", {cache: "no-store"}).then(function(r){ if (!r.ok) throw new Error("http"); return r.json(); }).then(function(data){
+      var arr = data && Array.isArray(data.questions) ? data.questions : (Array.isArray(data) ? data : []);
+      if (!arr.length) return;
+      var seen = {};
+      store.questions.forEach(function(q){ seen[q.subject + "|" + String(q.stem||"").replace(/\s+/g," ").trim()] = true; });
+      var added = 0;
+      arr.forEach(function(q){
+        var subj = q.subject;
+        var map = { "语文":"yuwen", "数学":"shuxue", "英语":"yingyu", "物理":"wuli", "化学":"huaxue", "生物":"shengwu" };
+        if (map[subj]) subj = map[subj];
+        var stem = String(q.question || q.stem || "").trim();
+        if (!stem || !subj) return;
+        var key = subj + "|" + stem.replace(/\s+/g," ").trim();
+        if (seen[key]) return;
+        seen[key] = true;
+        var ans = String(q.answer || "").trim().toUpperCase().charAt(0);
+        store.questions.push({ id: uid(), subject: subj, chapter: q.chapter || "", stem: stem, options: (q.options||[]).slice(0,4), answer: "ABCD".indexOf(ans), explanation: q.explanation || "" });
+        added++;
+      });
+      if (added){ save(); if (currentView === "home") renderHome(); }
+    }).catch(function(){});
+  }
+  function esc(s){
+    return String(s==null?"":s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+
+  /* ---------------- 导航 ---------------- */
+  var TABS = [
+    { id:"home",     label:"首页",   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>' },
+    { id:"practice", label:"刷题",   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>' },
+    { id:"wrong",    label:"错题本", icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5Z"/><path d="m9 8 6 6M15 8l-6 6"/></svg>' },
+    { id:"add",      label:"录题",   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>' },
+    { id:"import",   label:"导入",   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4"/><path d="m7 9 5-5 5 5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' },
+    { id:"library",  label:"题库",   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>' }
+  ];
+  var currentView = "home";
+  var tabsTop = document.getElementById("tabsTop");
+  var tabsBottom = document.getElementById("tabsBottom");
+
+  function buildTabs(){
+    tabsTop.innerHTML = "";
+    tabsBottom.innerHTML = "";
+    TABS.forEach(function(t){
+      var b1 = document.createElement("button");
+      b1.type = "button"; b1.textContent = t.label; b1.dataset.view = t.id;
+      if (t.id===currentView) b1.className = "on";
+      b1.addEventListener("click", function(){ go(t.id); });
+      tabsTop.appendChild(b1);
+      var b2 = document.createElement("button");
+      b2.type = "button"; b2.dataset.view = t.id;
+      if (t.id===currentView) b2.className = "on";
+      b2.innerHTML = t.icon + "<span>" + t.label + "</span>";
+      b2.addEventListener("click", function(){ go(t.id); });
+      tabsBottom.appendChild(b2);
+    });
+  }
+  function go(view, arg){
+    currentView = view;
+    var views = document.querySelectorAll(".view");
+    for (var i=0;i<views.length;i++) views[i].classList.remove("on");
+    document.getElementById("view-"+view).classList.add("on");
+    buildTabs();
+    if (view==="home") renderHome();
+    if (view==="practice") renderPracticeSetup(arg);
+    if (view==="wrong") renderWrong();
+    if (view==="import") renderImportHome();
+    if (view==="library") renderLibrary();
+    window.scrollTo(0,0);
+  }
+
+  /* ---------------- 统计 ---------------- */
+  function statsFor(subjectId){
+    var total = 0, done = 0, right = 0;
+    var qids = {};
+    store.questions.forEach(function(q){
+      if (!subjectId || q.subject===subjectId){ total++; qids[q.id]=true; }
+    });
+    store.history.forEach(function(h){
+      if (!subjectId || qids[h.qid]){ done++; if (h.ok) right++; }
+    });
+    return { total: total, done: done, right: right,
+             acc: done ? Math.round(right/done*100) : null };
+  }
+  function wrongCountFor(subjectId){
+    var n = 0;
+    store.wrongIds.forEach(function(id){
+      var q = findQ(id);
+      if (q && (!subjectId || q.subject===subjectId)) n++;
+    });
+    return n;
+  }
+  function findQ(id){
+    for (var i=0;i<store.questions.length;i++) if (store.questions[i].id===id) return store.questions[i];
+    return null;
+  }
+  function chaptersOf(subjectId){
+    var seen = {}, out = [];
+    store.questions.forEach(function(q){
+      if (q.subject===subjectId && q.chapter && !seen[q.chapter]){ seen[q.chapter]=true; out.push(q.chapter); }
+    });
+    return out;
+  }
+
+  /* ---------------- 首页 ---------------- */
+  function renderHome(){
+    var all = statsFor(null);
+    document.getElementById("stTotal").textContent = all.total;
+    document.getElementById("stDone").textContent = all.done;
+    document.getElementById("stAcc").textContent = all.acc===null ? "—" : all.acc + "%";
+    document.getElementById("stWrong").textContent = store.wrongIds.filter(function(id){return !!findQ(id);}).length;
+
+    var grid = document.getElementById("subjGrid");
+    grid.innerHTML = "";
+    SUBJECTS.forEach(function(s){
+      var st = statsFor(s.id);
+      var wc = wrongCountFor(s.id);
+      var card = document.createElement("div");
+      card.className = "subj";
+      var foot = st.total > 0
+        ? '<div class="subj-foot">'
+          + '<button class="btn primary" type="button" data-act="practice">开始刷题</button>'
+          + '<button class="btn" type="button" data-act="add">＋ 录题</button>'
+          + '</div>'
+        : '<div class="empty-hint">题库还是空的 —— 从练习册上录第一道题进来，就能开始刷了。</div>'
+          + '<div class="subj-foot"><button class="btn" type="button" data-act="add">＋ 录第一道题</button></div>';
+      card.innerHTML =
+        '<div class="subj-top"><div class="subj-dot" style="background:'+s.color+'">'+esc(s.name.charAt(0))+'</div>'
+        + '<div><div class="subj-name">'+esc(s.name)+'</div>'
+        + '<div class="subj-sub">'+(st.total? st.total + " 道题" : "尚未录题")+'</div></div></div>'
+        + '<div class="subj-meta"><span>已作答 <b>'+st.done+'</b></span>'
+        + '<span>正确率 <b>'+(st.acc===null?"—":st.acc+"%")+'</b></span>'
+        + '<span>错题 <b>'+wc+'</b></span></div>'
+        + '<div class="bar"><i style="width:'+(st.acc===null?0:st.acc)+'%"></i></div>'
+        + foot;
+      card.querySelectorAll("button").forEach(function(btn){
+        btn.addEventListener("click", function(){
+          if (btn.dataset.act==="practice"){ go("practice", s.id); document.getElementById("pfSubject").value = s.id; document.getElementById("pfChapter").value = ""; document.getElementById("btnStartPractice").click(); }
+          else { document.getElementById("afSubject").value = s.id; go("add"); }
+        });
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  /* ---------------- 刷题 ---------------- */
+  var practice = null; // {queue:[], idx:0, right:0, wrong:0, answered:false, wrongMode:false}
+
+  function fillSubjectSelect(sel, withAll){
+    sel.innerHTML = "";
+    if (withAll){
+      var o = document.createElement("option");
+      o.value = ""; o.textContent = "全部科目";
+      sel.appendChild(o);
+    }
+    SUBJECTS.forEach(function(s){
+      var o = document.createElement("option");
+      o.value = s.id; o.textContent = s.name;
+      sel.appendChild(o);
+    });
+  }
+  function refreshChapterSelect(){
+    var sid = document.getElementById("pfSubject").value;
+    var sel = document.getElementById("pfChapter");
+    var cur = sel.value;
+    sel.innerHTML = '<option value="">全部章节</option>';
+    if (sid){
+      chaptersOf(sid).forEach(function(c){
+        var o = document.createElement("option");
+        o.value = c; o.textContent = c;
+        sel.appendChild(o);
+      });
+    }
+    sel.value = cur;
+  }
+  function renderPracticeSetup(preSubject){
+    if (preSubject) document.getElementById("pfSubject").value = preSubject;
+    refreshChapterSelect();
+    document.getElementById("practiceHint").textContent =
+      store.questions.length ? "共 " + store.questions.length + " 道题可选" : "题库为空";
+    if (!practice){
+      document.getElementById("practiceSetup").style.display = "";
+      hidePracticeCard();
+      document.getElementById("practiceResult").style.display = "none";
+      document.getElementById("practiceEmpty").style.display = store.questions.length ? "none" : "";
+    }
+  }
+  function showPracticeCard(){
+    var c = document.getElementById("practiceCard");
+    c.style.display = "";
+    c.classList.add("showcard");
+  }
+  function hidePracticeCard(){
+    var c = document.getElementById("practiceCard");
+    c.classList.remove("showcard");
+    c.style.display = "none";
+  }
+  function startPractice(queue, wrongMode){
+    if (!queue.length){
+      document.getElementById("practiceEmpty").style.display = "";
+      hidePracticeCard();
+      return;
+    }
+    practice = { queue: queue, idx: 0, right: 0, wrong: 0, answered: false, wrongMode: !!wrongMode };
+    document.getElementById("practiceSetup").style.display = "none";
+    document.getElementById("practiceEmpty").style.display = "none";
+    document.getElementById("practiceResult").style.display = "none";
+    showPracticeCard();
+    showQuestion();
+  }
+  function showQuestion(){
+    var q = practice.queue[practice.idx];
+    var s = subjById(q.subject);
+    practice.answered = false;
+    document.getElementById("qPos").textContent = "第 " + (practice.idx+1) + " / " + practice.queue.length + " 题";
+    document.getElementById("qBar").style.width = Math.round(practice.idx/practice.queue.length*100) + "%";
+    document.getElementById("qScore").textContent = "对 " + practice.right + " · 错 " + practice.wrong;
+    document.getElementById("qTags").innerHTML =
+      '<span class="tag subj" style="background:'+s.color+'">'+esc(s.name)+'</span>'
+      + (q.chapter ? '<span class="tag">'+esc(q.chapter)+'</span>' : "")
+      + (practice.wrongMode ? '<span class="tag">错题重练</span>' : "");
+    document.getElementById("qStem").textContent = q.stem;
+    var opts = document.getElementById("qOpts");
+    opts.innerHTML = "";
+    q.options.forEach(function(opt, i){
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "opt";
+      b.innerHTML = '<span class="letter">'+LETTERS[i]+'</span><span class="otext"></span>';
+      b.querySelector(".otext").textContent = opt;
+      b.addEventListener("click", function(){ answer(i); });
+      opts.appendChild(b);
+    });
+    var v = document.getElementById("qVerdict");
+    v.className = "verdict"; v.innerHTML = "";
+    document.getElementById("btnNextQ").style.display = "none";
+    scratchSyncToQuestion(q.id);
+  }
+  function answer(i){
+    if (!practice || practice.answered) return;
+    practice.answered = true;
+    var q = practice.queue[practice.idx];
+    var ok = i === q.answer;
+    store.history.push({ qid: q.id, ok: ok, t: Date.now() });
+    var wi = store.wrongIds.indexOf(q.id);
+    if (!ok && wi < 0) store.wrongIds.push(q.id);
+    if (ok && wi >= 0) store.wrongIds.splice(wi, 1);
+    if (ok) practice.right++; else practice.wrong++;
+    save();
+
+    var btns = document.getElementById("qOpts").children;
+    for (var k=0;k<btns.length;k++){
+      btns[k].disabled = true;
+      if (k === q.answer) btns[k].classList.add("right");
+      else if (k === i) btns[k].classList.add("wrong");
+      else if (k === i) btns[k].classList.add("picked");
+    }
+    if (i !== q.answer) btns[i].classList.add("wrong");
+    document.getElementById("qScore").textContent = "对 " + practice.right + " · 错 " + practice.wrong;
+    var v = document.getElementById("qVerdict");
+    v.className = "verdict show " + (ok ? "ok" : "bad");
+    v.innerHTML = '<div class="vt">' + (ok ? "✓ 答对了" : "✗ 答错了，正确答案是 " + LETTERS[q.answer]) + '</div>'
+      + (q.explanation ? '<div class="expl">' + esc(q.explanation) + '</div>'
+                        : (ok ? "" : '<div class="expl">这道题还没有录解析，可以回题库给它补上。</div>'))
+      + (!ok ? '<div class="expl" style="margin-top:4px;">已自动收进错题本。</div>' : "")
+      + (ok && practice.wrongMode ? '<div class="expl" style="margin-top:4px;">已从错题本移出。</div>' : "");
+    var next = document.getElementById("btnNextQ");
+    next.textContent = practice.idx + 1 >= practice.queue.length ? "看结果 →" : "下一题 →";
+    next.style.display = "";
+    document.getElementById("qBar").style.width = Math.round((practice.idx+1)/practice.queue.length*100) + "%";
+  }
+  function finishPractice(){
+    if (typeof scratchPersist === "function") scratchPersist();
+    hidePracticeCard();
+    document.getElementById("practiceResult").style.display = "";
+    var total = practice.right + practice.wrong;
+    document.getElementById("resScore").textContent = practice.right + " / " + total;
+    var pct = total ? Math.round(practice.right/total*100) : 0;
+    document.getElementById("resText").textContent =
+      total === 0 ? "这一轮没有作答。" :
+      pct === 100 ? "全对，漂亮！这一轮的状态很好。" :
+      pct >= 70 ? "正确率 " + pct + "%，错的 " + practice.wrong + " 道已经收进错题本，趁热重练一遍记得更牢。" :
+      "正确率 " + pct + "%。别急，先看错题本里的解析，把错因弄清楚再刷下一轮。";
+    practice = null;
+    document.getElementById("practiceSetup").style.display = "";
+    renderPracticeSetup();
+    document.getElementById("practiceSetup").style.display = "none";
+  }
+
+  document.getElementById("pfSubject").addEventListener("change", refreshChapterSelect);
+  document.getElementById("btnStartPractice").addEventListener("click", function(){
+    var sid = document.getElementById("pfSubject").value;
+    var ch = document.getElementById("pfChapter").value;
+    var queue = store.questions.filter(function(q){
+      return (!sid || q.subject===sid) && (!ch || q.chapter===ch);
+    });
+    if (document.getElementById("pfOrder").value === "rand"){
+      for (var i=queue.length-1;i>0;i--){
+        var j = Math.floor(Math.random()*(i+1));
+        var t = queue[i]; queue[i]=queue[j]; queue[j]=t;
+      }
+    }
+    startPractice(queue, false);
+  });
+  document.getElementById("btnNextQ").addEventListener("click", function(){
+    if (!practice) return;
+    if (practice.idx + 1 >= practice.queue.length) finishPractice();
+    else { practice.idx++; showQuestion(); }
+  });
+  document.getElementById("btnQuitPractice").addEventListener("click", function(){
+    if (typeof scratchPersist === "function") scratchPersist();
+    practice = null;
+    hidePracticeCard();
+    document.getElementById("practiceResult").style.display = "none";
+    document.getElementById("practiceSetup").style.display = "";
+    renderPracticeSetup();
+  });
+  document.getElementById("btnAgain").addEventListener("click", function(){
+    document.getElementById("practiceResult").style.display = "none";
+    document.getElementById("practiceSetup").style.display = "";
+    renderPracticeSetup();
+  });
+
+  /* ---------------- 草稿板（Canvas + Pointer Events，适配 Apple Pencil） ---------------- */
+  var scratchCanvas = document.getElementById("scratchCanvas");
+  var sctx = scratchCanvas.getContext("2d");
+  var scratchPanel = document.getElementById("scratchPanel");
+  var scratchOpen = false;
+  var scratchQid = null;        // 当前画布对应的题目 id
+  var scratchHasInk = false;    // 当前画布上是否有笔迹
+  var scratchTool = "pen";      // pen | eraser
+  var scratchColor = "#23201b"; // 黑 / 红 / 蓝
+  var scratchPenOnly = true;    // 仅用笔书写（防手掌误触）
+  var drawing = false;
+  var activePointer = null;
+  var lastPt = null, lastMid = null;
+  var undoStack = [];           // 每笔落笔前的画布快照（dataURL 或 null）
+
+  function scratchScale(){
+    var r = scratchCanvas.getBoundingClientRect();
+    return r.width ? scratchCanvas.width / r.width : 1;
+  }
+  function scratchPoint(e){
+    var r = scratchCanvas.getBoundingClientRect();
+    var k = scratchCanvas.width / r.width;
+    return { x: (e.clientX - r.left) * k, y: (e.clientY - r.top) * k };
+  }
+  function scratchWidth(e){
+    var k = scratchScale();
+    if (scratchTool === "eraser") return 26 * k;
+    var p = (typeof e.pressure === "number" && e.pressure > 0) ? e.pressure : 0.5;
+    var w = (0.9 + p * 4.6) * k;              // 压感越强线越粗
+    return Math.max(0.7 * k, Math.min(8.5 * k, w));
+  }
+  function typeName(t){ return t === "pen" ? "Apple Pencil" : t === "touch" ? "手指" : t === "mouse" ? "鼠标" : "输入设备"; }
+  function setPenStatus(html){ document.getElementById("penStatus").innerHTML = html; }
+
+  function updateDraftUI(){
+    var has = !!(scratchQid && store.drafts[scratchQid]);
+    var d = document.getElementById("draftState");
+    d.textContent = has ? "本题草稿已保存到本机" : "本题暂无草稿";
+    d.className = "draft-state" + (has ? " has" : "");
+    var btn = document.getElementById("btnScratch");
+    btn.textContent = scratchOpen ? "✎ 收起草稿板" : (has ? "✎ 草稿板（有草稿）" : "✎ 打开草稿板");
+    btn.setAttribute("aria-expanded", scratchOpen ? "true" : "false");
+  }
+  function scratchPersist(){
+    if (!scratchQid) return;
+    if (scratchHasInk) store.drafts[scratchQid] = scratchCanvas.toDataURL("image/png");
+    else delete store.drafts[scratchQid];
+    save();
+    updateDraftUI();
+  }
+  function drawDataURL(url, qid){
+    if (!url){ sctx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height); scratchHasInk = false; return; }
+    var img = new Image();
+    img.onload = function(){
+      if (qid && qid !== scratchQid) return;  // 已切题，丢弃过期恢复
+      sctx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+      sctx.drawImage(img, 0, 0, scratchCanvas.width, scratchCanvas.height);
+      scratchHasInk = true;
+    };
+    img.src = url;
+  }
+  function sizeCanvas(preserveURL){
+    var wrap = scratchCanvas.parentElement;
+    var cssW = wrap.clientWidth || 340;
+    var cssH = Math.round(cssW * 1.25);
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    scratchCanvas.style.height = cssH + "px";
+    var w = Math.round(cssW * dpr), h = Math.round(cssH * dpr);
+    if (scratchCanvas.width === w && scratchCanvas.height === h && !preserveURL) return;
+    scratchCanvas.width = w; scratchCanvas.height = h;
+    if (preserveURL) drawDataURL(preserveURL, scratchQid);
+  }
+  function loadDraftFor(qid){
+    undoStack = [];
+    sctx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+    scratchHasInk = false;
+    var url = store.drafts[qid];
+    if (url) drawDataURL(url, qid);
+    updateDraftUI();
+  }
+  function scratchSyncToQuestion(qid){
+    if (scratchQid && scratchQid !== qid && scratchHasInk) scratchPersist();
+    scratchQid = qid;
+    drawing = false; activePointer = null;
+    if (scratchOpen){
+      sizeCanvas(null);
+      loadDraftFor(qid);
+    } else {
+      updateDraftUI();
+    }
+  }
+  function setScratchOpen(open){
+    scratchOpen = open;
+    scratchPanel.hidden = !open;
+    document.getElementById("practiceCard").classList.toggle("has-scratch", open);
+    if (open && scratchQid){
+      // 等面板完成布局后再按实际宽度定画布尺寸，随后恢复本题草稿
+      requestAnimationFrame(function(){
+        sizeCanvas(null);
+        loadDraftFor(scratchQid);
+      });
+      setPenStatus(scratchPenOnly ? "仅用笔模式：用 Apple Pencil 落笔试试" : "笔和手指都可以画");
+    }
+    updateDraftUI();
+  }
+  document.getElementById("btnScratch").addEventListener("click", function(){
+    setScratchOpen(!scratchOpen);
+  });
+
+  /* 工具：画笔 / 橡皮 / 颜色 */
+  function setTool(t){
+    scratchTool = t;
+    document.getElementById("toolPen").classList.toggle("on", t === "pen");
+    document.getElementById("toolEraser").classList.toggle("on", t === "eraser");
+  }
+  document.getElementById("toolPen").addEventListener("click", function(){ setTool("pen"); });
+  document.getElementById("toolEraser").addEventListener("click", function(){ setTool("eraser"); });
+  document.querySelectorAll(".swatch").forEach(function(sw){
+    sw.addEventListener("click", function(){
+      scratchColor = sw.dataset.color;
+      document.querySelectorAll(".swatch").forEach(function(x){ x.classList.toggle("on", x === sw); });
+      setTool("pen");
+    });
+  });
+  document.getElementById("toolClear").addEventListener("click", function(){
+    var btn = this;
+    if (btn.dataset.confirm === "1"){
+      undoStack.push(scratchHasInk ? scratchCanvas.toDataURL("image/png") : null);
+      if (undoStack.length > 25) undoStack.shift();
+      sctx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+      scratchHasInk = false;
+      scratchPersist();
+      setPenStatus("草稿已清空（可用「撤销一笔」找回）");
+      btn.dataset.confirm = ""; btn.textContent = "清空"; btn.classList.remove("warn-confirm");
+    } else {
+      btn.dataset.confirm = "1"; btn.textContent = "再点一次清空"; btn.classList.add("warn-confirm");
+      setTimeout(function(){ btn.dataset.confirm = ""; btn.textContent = "清空"; btn.classList.remove("warn-confirm"); }, 3000);
+    }
+  });
+  document.getElementById("toolUndo").addEventListener("click", function(){
+    if (!undoStack.length){ setPenStatus("没有可以撤销的笔画了"); return; }
+    var prev = undoStack.pop();
+    sctx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+    scratchHasInk = !!prev;
+    if (prev) drawDataURL(prev, scratchQid);
+    scratchPersist();
+    setPenStatus("已撤销一笔");
+  });
+
+  /* 书写方式：仅用笔 / 笔+手指 */
+  function setPenOnly(only){
+    scratchPenOnly = only;
+    document.getElementById("modePenOnly").classList.toggle("on", only);
+    document.getElementById("modeAll").classList.toggle("on", !only);
+    setPenStatus(only ? "已切换：仅用笔书写，手指和手掌触碰会被忽略" : "已切换：手指也能画");
+  }
+  document.getElementById("modePenOnly").addEventListener("click", function(){ setPenOnly(true); });
+  document.getElementById("modeAll").addEventListener("click", function(){ setPenOnly(false); });
+
+  /* 书写：Pointer Events + 压感 + 防滚动（CSS touch-action:none） */
+  scratchCanvas.addEventListener("pointerdown", function(e){
+    if (!e.isPrimary) return;
+    if (scratchPenOnly && e.pointerType === "touch"){
+      setPenStatus("手指触碰已忽略 —— 当前是「仅用笔书写」，手掌搭上来也不会误画");
+      return;
+    }
+    e.preventDefault();
+    try { scratchCanvas.setPointerCapture(e.pointerId); } catch(err){}
+    undoStack.push(scratchHasInk ? scratchCanvas.toDataURL("image/png") : null);
+    if (undoStack.length > 25) undoStack.shift();
+    drawing = true; activePointer = e.pointerId;
+    lastPt = scratchPoint(e); lastMid = lastPt;
+    // 落笔点先画一个圆点，轻点也有痕迹
+    sctx.beginPath();
+    sctx.globalCompositeOperation = scratchTool === "eraser" ? "destination-out" : "source-over";
+    sctx.fillStyle = scratchColor;
+    sctx.arc(lastPt.x, lastPt.y, scratchWidth(e) / 2, 0, Math.PI * 2);
+    sctx.fill();
+    scratchHasInk = scratchTool !== "eraser" ? true : scratchHasInk;
+    setPenStatus("正在用 <b>" + typeName(e.pointerType) + "</b> 书写"
+      + (e.pointerType === "pen" ? " · 压感 " + ((typeof e.pressure === "number" && e.pressure > 0) ? e.pressure.toFixed(2) : "—") : ""));
+  });
+  scratchCanvas.addEventListener("pointermove", function(e){
+    if (!drawing || e.pointerId !== activePointer) return;
+    e.preventDefault();
+    var evs = (typeof e.getCoalescedEvents === "function") ? e.getCoalescedEvents() : [e];
+    if (!evs.length) evs = [e];
+    sctx.lineCap = "round"; sctx.lineJoin = "round";
+    sctx.globalCompositeOperation = scratchTool === "eraser" ? "destination-out" : "source-over";
+    sctx.strokeStyle = scratchColor;
+    for (var i = 0; i < evs.length; i++){
+      var pt = scratchPoint(evs[i]);
+      var mid = { x: (lastPt.x + pt.x) / 2, y: (lastPt.y + pt.y) / 2 };
+      sctx.beginPath();
+      sctx.moveTo(lastMid.x, lastMid.y);
+      sctx.quadraticCurveTo(lastPt.x, lastPt.y, mid.x, mid.y);
+      sctx.lineWidth = scratchWidth(evs[i]);
+      sctx.stroke();
+      lastPt = pt; lastMid = mid;
+    }
+    if (scratchTool === "pen") scratchHasInk = true;
+    if (e.pointerType === "pen" && typeof e.pressure === "number" && e.pressure > 0){
+      setPenStatus("正在用 <b>Apple Pencil</b> 书写 · 压感 " + e.pressure.toFixed(2));
+    }
+  });
+  function endStroke(e){
+    if (!drawing || (e && e.pointerId !== activePointer)) return;
+    drawing = false; activePointer = null;
+    sctx.globalCompositeOperation = "source-over";
+    scratchPersist();   // 每笔写完立刻存本地
+  }
+  scratchCanvas.addEventListener("pointerup", endStroke);
+  scratchCanvas.addEventListener("pointercancel", endStroke);
+  scratchCanvas.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+
+  var resizeTimer = null;
+  window.addEventListener("resize", function(){
+    if (!scratchOpen) return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function(){
+      var keep = scratchHasInk ? scratchCanvas.toDataURL("image/png") : null;
+      var oldW = scratchCanvas.width;
+      sizeCanvas(null);
+      if (keep && scratchCanvas.width !== oldW) drawDataURL(keep, scratchQid);
+    }, 220);
+  });
+
+  /* ---------------- 错题本 ---------------- */
+  function qItemHTML(q, inWrong){
+    var s = subjById(q.subject);
+    return '<div class="meta"><span class="tag subj" style="background:'+s.color+'">'+esc(s.name)+'</span>'
+      + (q.chapter ? '<span class="tag">'+esc(q.chapter)+'</span>' : "") + '</div>'
+      + '<div class="stem">' + esc(q.stem) + '</div>'
+      + '<div class="ans">正确答案：<b>' + LETTERS[q.answer] + '．' + esc(q.options[q.answer]) + '</b>'
+      + (q.explanation ? '<br>解析：' + esc(q.explanation) : "") + '</div>';
+  }
+  function renderWrong(){
+    var wrap = document.getElementById("wrongList");
+    var ids = store.wrongIds.filter(function(id){ return !!findQ(id); });
+    document.getElementById("wrongHint").textContent = ids.length ? "共 " + ids.length + " 道待重练" : "";
+    wrap.innerHTML = "";
+    if (!ids.length){
+      wrap.innerHTML = '<div class="empty-state"><div class="big">错题本是空的</div>'
+        + '<p>刷题时答错的题会自动收进来。清空错题本的最好办法，就是把它们一道道练对。</p>'
+        + '<button class="btn primary" type="button" data-goto="practice">去刷题</button></div>';
+      bindGoto(wrap);
+      return;
+    }
+    SUBJECTS.forEach(function(s){
+      var qs = ids.map(findQ).filter(function(q){ return q && q.subject===s.id; });
+      if (!qs.length) return;
+      var head = document.createElement("div");
+      head.className = "group-title";
+      head.innerHTML = '<span class="subj-dot" style="background:'+s.color+';width:30px;height:30px;font-size:15px;border-radius:8px;">'+esc(s.name.charAt(0))+'</span>'
+        + esc(s.name) + ' <span class="count">' + qs.length + ' 道</span>';
+      var pb = document.createElement("button");
+      pb.type = "button"; pb.className = "btn small primary"; pb.textContent = "重练本组";
+      pb.addEventListener("click", function(){
+        go("practice");
+        startPractice(qs.slice(), true);
+      });
+      head.appendChild(pb);
+      wrap.appendChild(head);
+      qs.forEach(function(q){
+        var item = document.createElement("div");
+        item.className = "qitem";
+        item.innerHTML = qItemHTML(q, true)
+          + '<div class="row-actions"><button class="btn small" type="button" data-rm>移出错题本</button></div>';
+        item.querySelector("[data-rm]").addEventListener("click", function(){
+          store.wrongIds = store.wrongIds.filter(function(id){ return id !== q.id; });
+          save(); renderWrong(); showToast("已移出错题本");
+        });
+        wrap.appendChild(item);
+      });
+    });
+  }
+
+  /* ---------------- 录题 ---------------- */
+  var formAnswer = -1;
+  var pickWrap = document.getElementById("afAnswerPick");
+  pickWrap.querySelectorAll("button").forEach(function(b){
+    b.addEventListener("click", function(){
+      formAnswer = parseInt(b.dataset.ans, 10);
+      pickWrap.querySelectorAll("button").forEach(function(x){
+        x.classList.toggle("on", parseInt(x.dataset.ans,10)===formAnswer);
+      });
+    });
+  });
+  function formMsg(text, ok){
+    var m = document.getElementById("addMsg");
+    m.textContent = text;
+    m.className = "form-msg show " + (ok ? "ok" : "bad");
+  }
+  document.getElementById("addForm").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var subject = document.getElementById("afSubject").value;
+    var chapter = document.getElementById("afChapter").value.trim();
+    var stem = document.getElementById("afStem").value.trim();
+    var options = [0,1,2,3].map(function(i){
+      return document.getElementById("afOpt"+i).value.trim();
+    });
+    var expl = document.getElementById("afExpl").value.trim();
+    if (!stem) return formMsg("题干还没填。", false);
+    for (var i=0;i<4;i++) if (!options[i]) return formMsg("选项 " + LETTERS[i] + " 还没填，四个选项都要有内容。", false);
+    if (formAnswer < 0) return formMsg("还没选正确答案，点一下 A / B / C / D。", false);
+    store.questions.push({
+      id: uid(), subject: subject, chapter: chapter, stem: stem,
+      options: options, answer: formAnswer, explanation: expl, createdAt: Date.now()
+    });
+    save();
+    formMsg("已存入「" + subjById(subject).name + "」题库，现在共有 " + statsFor(subject).total + " 道。可以继续录下一道。", true);
+    document.getElementById("afStem").value = "";
+    [0,1,2,3].forEach(function(i){ document.getElementById("afOpt"+i).value = ""; });
+    document.getElementById("afExpl").value = "";
+    formAnswer = -1;
+    pickWrap.querySelectorAll("button").forEach(function(x){ x.classList.remove("on"); });
+    document.getElementById("afStem").focus();
+  });
+  document.getElementById("btnClearForm").addEventListener("click", function(){
+    document.getElementById("addForm").reset();
+    formAnswer = -1;
+    pickWrap.querySelectorAll("button").forEach(function(x){ x.classList.remove("on"); });
+    document.getElementById("addMsg").className = "form-msg";
+  });
+
+  /* ---------------- 题库与备份 ---------------- */
+  function renderLibrary(){
+    document.getElementById("libHint").textContent = "共 " + store.questions.length + " 道题";
+    var sid = document.getElementById("libSubject").value;
+    var kw = document.getElementById("libSearch").value.trim().toLowerCase();
+    var list = document.getElementById("libList");
+    list.innerHTML = "";
+    var qs = store.questions.filter(function(q){
+      return (!sid || q.subject===sid) && (!kw || q.stem.toLowerCase().indexOf(kw) >= 0);
+    });
+    if (!store.questions.length){
+      list.innerHTML = '<div class="empty-state"><div class="big">题库还是空的</div>'
+        + '<p>六个科目的架子都搭好了，去录题页录第一道题吧。</p>'
+        + '<button class="btn primary" type="button" data-goto="add">去录题</button></div>';
+      bindGoto(list);
+      return;
+    }
+    if (!qs.length){
+      list.innerHTML = '<div class="empty-state"><div class="big">没找到符合的题</div><p>换个科目或关键词试试。</p></div>';
+      return;
+    }
+    qs.slice().reverse().forEach(function(q){
+      var item = document.createElement("div");
+      item.className = "qitem";
+      var inWrong = store.wrongIds.indexOf(q.id) >= 0;
+      item.innerHTML = qItemHTML(q, inWrong)
+        + (inWrong ? '<div class="ans" style="color:var(--bad);">在错题本中</div>' : "")
+        + '<div class="row-actions"><button class="btn small danger" type="button" data-del>删除这道题</button></div>';
+      item.querySelector("[data-del]").addEventListener("click", function(){
+        if (item.dataset.confirm === "1"){
+          store.questions = store.questions.filter(function(x){ return x.id !== q.id; });
+          store.wrongIds = store.wrongIds.filter(function(id){ return id !== q.id; });
+          store.history = store.history.filter(function(h){ return h.qid !== q.id; });
+          delete store.drafts[q.id];
+          save(); renderLibrary(); showToast("已删除");
+        } else {
+          item.dataset.confirm = "1";
+          this.textContent = "再点一次确认删除";
+          var btn = this;
+          setTimeout(function(){ item.dataset.confirm=""; btn.textContent="删除这道题"; }, 3000);
+        }
+      });
+      list.appendChild(item);
+    });
+  }
+  document.getElementById("libSubject").addEventListener("change", renderLibrary);
+  document.getElementById("libSearch").addEventListener("input", renderLibrary);
+
+  document.getElementById("btnExport").addEventListener("click", function(){
+    var data = JSON.stringify({
+      app: "gaozhong-offline-tiku", version: 2, exportedAt: new Date().toISOString(),
+      questions: store.questions, history: store.history, wrongIds: store.wrongIds, drafts: store.drafts
+    }, null, 2);
+    downloadBlob(new Blob([data], { type: "application/json" }), "刷题库备份-" + dateStamp() + ".json");
+    libMsg("备份已导出：共 " + store.questions.length + " 道题（含各题草稿）。把这个 JSON 存好，导入后可完整恢复。", true);
+  });
+  document.getElementById("importFile").addEventListener("change", function(ev){
+    var f = ev.target.files && ev.target.files[0];
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try {
+        var d = JSON.parse(String(reader.result));
+        if (!d || !Array.isArray(d.questions)) throw new Error("bad");
+        var valid = d.questions.filter(function(q){
+          return q && q.id && q.stem && Array.isArray(q.options) && q.options.length===4
+            && typeof q.answer === "number" && q.answer >= 0 && q.answer <= 3
+            && SUBJECTS.some(function(s){ return s.id === q.subject; });
+        });
+        if (!valid.length) throw new Error("empty");
+        store.questions = valid;
+        store.history = Array.isArray(d.history) ? d.history : [];
+        store.wrongIds = Array.isArray(d.wrongIds) ? d.wrongIds.filter(function(id){ return !!findQ(id); }) : [];
+        store.drafts = (d.drafts && typeof d.drafts === "object") ? d.drafts : {};
+        Object.keys(store.drafts).forEach(function(id){ if (!findQ(id)) delete store.drafts[id]; });
+        save(); renderLibrary();
+        libMsg("导入成功：" + valid.length + " 道题已恢复到题库。", true);
+      } catch(e){
+        libMsg("导入失败：这个文件不是有效的题库备份 JSON，原有数据没有改动。", false);
+      }
+      ev.target.value = "";
+    };
+    reader.readAsText(f);
+  });
+  document.getElementById("btnWipe").addEventListener("click", function(){
+    var btn = this;
+    if (btn.dataset.confirm === "1"){
+      store = { questions: [], history: [], wrongIds: [], drafts: {} };
+      save(); renderLibrary();
+      var m = document.getElementById("wipeMsg");
+      m.textContent = "已清空全部数据。"; m.className = "form-msg show ok";
+      btn.dataset.confirm = ""; btn.textContent = "清空全部数据";
+    } else {
+      btn.dataset.confirm = "1"; btn.textContent = "再点一次，确认清空全部数据";
+      setTimeout(function(){ btn.dataset.confirm=""; btn.textContent="清空全部数据"; }, 3500);
+    }
+  });
+  function libMsg(text, ok){
+    var m = document.getElementById("libMsg");
+    m.textContent = text;
+    m.className = "form-msg show " + (ok ? "ok" : "bad");
+  }
+
+  /* ---------------- 导入题目（文件 / 粘贴，全部本地解析） ---------------- */
+  var importBatch = null; // { source, items:[{data, raw, errors, status, skipped}] }
+
+  function renderImportHome(){
+    document.getElementById("impHint").textContent = "题库现有 " + store.questions.length + " 道题";
+  }
+  function impFileMsg(text, ok){
+    var m = document.getElementById("impFileMsg");
+    if (!text){ m.className = "form-msg"; m.textContent = ""; return; }
+    m.textContent = text;
+    m.className = "form-msg show " + (ok ? "ok" : "bad");
+  }
+  function subjIdFromName(v){
+    v = String(v == null ? "" : v).trim();
+    if (!v) return "";
+    for (var i = 0; i < SUBJECTS.length; i++){
+      if (SUBJECTS[i].id === v || SUBJECTS[i].name === v) return SUBJECTS[i].id;
+    }
+    return "";
+  }
+  function normStem(s){ return String(s || "").replace(/\s+/g, " ").trim(); }
+  function dupKey(subject, stem){ return subject + "|" + normStem(stem); }
+  function parseAnswerVal(v){
+    if (typeof v === "number"){
+      if (v === 0) return 0;
+      if (v >= 1 && v <= 4) return v - 1;
+      return -1;
+    }
+    var s = String(v == null ? "" : v).trim().toUpperCase();
+    if (!s) return -1;
+    var c = s.charAt(0);
+    if (c >= "A" && c <= "D") return c.charCodeAt(0) - 65;
+    if (c >= "1" && c <= "4") return parseInt(c, 10) - 1;
+    if (c === "0") return 0;
+    return -1;
+  }
+  function validateImpData(d){
+    var errs = [];
+    if (!subjIdFromName(d.subject)){
+      errs.push(d.subject ? "科目无法识别：「" + d.subject + "」（要填 语文 / 数学 / 英语 / 物理 / 化学 / 生物 之一）" : "缺少科目");
+    }
+    if (!String(d.stem || "").trim()) errs.push("缺少题干");
+    var opts = Array.isArray(d.options) ? d.options : [];
+    for (var i = 0; i < 4; i++){
+      if (!String(opts[i] == null ? "" : opts[i]).trim()) errs.push("选项 " + LETTERS[i] + " 缺失或为空");
+    }
+    if (typeof d.answer !== "number" || d.answer < 0 || d.answer > 3) errs.push("答案缺失或无法识别（写 A / B / C / D）");
+    return errs;
+  }
+  function refreshImpStatuses(){
+    if (!importBatch) return;
+    var seen = {};
+    store.questions.forEach(function(q){ seen[dupKey(q.subject, q.stem)] = true; });
+    importBatch.items.forEach(function(it){
+      it.errors = validateImpData(it.data);
+      if (it.errors.length){ it.status = "bad"; return; }
+      var k = dupKey(subjIdFromName(it.data.subject), it.data.stem);
+      if (seen[k]) it.status = "dup";
+      else { it.status = "ok"; if (!it.skipped) seen[k] = true; }
+    });
+  }
+
+  /* 纯文本模板解析：一道题一段，--- 分隔（也兼容不写分隔、只重复「科目：」的情况） */
+  function parseTextQuestions(text){
+    var norm = String(text || "").replace(/\r\n?/g, "\n");
+    var items = [];
+    var d = null, cur = null, rawLines = [];
+    function fresh(){ return { subject: "", chapter: "", stem: "", options: ["", "", "", ""], answer: -1, explanation: "" }; }
+    function hasContent(x){
+      return !!x && !!(x.stem || x.subject || x.answer >= 0 || x.options.some(function(o){ return !!o; }));
+    }
+    function flush(){
+      if (hasContent(d)) items.push({ data: d, raw: rawLines.join("\n").trim() });
+      d = null; cur = null; rawLines = [];
+    }
+    norm.split("\n").forEach(function(line){
+      if (/^\s*(?:-{3,}|—{3,}|={3,})\s*$/.test(line)){ flush(); return; }
+      var m;
+      if ((m = line.match(/^\s*(?:科目|学科)\s*[：:]\s*(.*)$/))){
+        if (d && (d.stem || d.answer >= 0 || d.options.some(function(o){ return !!o; }))) flush();
+        if (!d) d = fresh();
+        d.subject = m[1].trim(); cur = null; rawLines.push(line); return;
+      }
+      if ((m = line.match(/^\s*(?:章节|分类)\s*[：:]\s*(.*)$/))){
+        if (!d) d = fresh();
+        d.chapter = m[1].trim(); cur = null; rawLines.push(line); return;
+      }
+      if ((m = line.match(/^\s*(?:题目|题干|问题)\s*[：:]\s*(.*)$/))){
+        if (d && d.stem && d.answer >= 0) flush();
+        if (!d) d = fresh();
+        d.stem = m[1].trim(); cur = "stem"; rawLines.push(line); return;
+      }
+      if ((m = line.match(/^\s*(?:答案|正确答案)\s*[：:]\s*(.*)$/))){
+        if (!d) d = fresh();
+        d.answer = parseAnswerVal(m[1]); cur = null; rawLines.push(line); return;
+      }
+      if ((m = line.match(/^\s*(?:解析|讲解)\s*[：:]\s*(.*)$/))){
+        if (!d) d = fresh();
+        d.explanation = m[1].trim(); cur = "expl"; rawLines.push(line); return;
+      }
+      if ((m = line.match(/^\s*([ABCD])\s*[.、．:：)）]\s*(.*)$/))){
+        if (!d) d = fresh();
+        var idx = m[1].charCodeAt(0) - 65;
+        d.options[idx] = m[2].trim(); cur = idx; rawLines.push(line); return;
+      }
+      var t = line.trim();
+      if (!t) return;
+      if (!d) d = fresh();
+      rawLines.push(line);
+      if (cur === "stem") d.stem = (d.stem ? d.stem + "\n" : "") + t;
+      else if (cur === "expl") d.explanation = (d.explanation ? d.explanation + "\n" : "") + t;
+      else if (typeof cur === "number") d.options[cur] = (d.options[cur] ? d.options[cur] + "\n" : "") + t;
+      else if (!d.stem && !d.subject){ d.stem = t; cur = "stem"; }
+    });
+    flush();
+    return items;
+  }
+
+  /* JSON 解析：数组，或 { questions:[...] }，或单个题目对象 */
+  function parseJSONQuestions(text){
+    var root = JSON.parse(text);
+    var arr = null;
+    if (Array.isArray(root)) arr = root;
+    else if (root && Array.isArray(root.questions)) arr = root.questions;
+    else if (root && typeof root === "object") arr = [root];
+    if (!arr) throw new Error("format");
+    return arr.map(function(q){
+      q = q || {};
+      var rawOpts = q.options || q.choices || [];
+      var options = ["", "", "", ""];
+      if (Array.isArray(rawOpts)) options = [0, 1, 2, 3].map(function(i){ return String(rawOpts[i] == null ? "" : rawOpts[i]); });
+      else if (rawOpts && typeof rawOpts === "object") options = LETTERS.map(function(L){ return String(rawOpts[L] == null ? "" : rawOpts[L]); });
+      return {
+        data: {
+          subject: q.subject || "",
+          chapter: q.chapter || "",
+          stem: q.question || q.stem || "",
+          options: options,
+          answer: parseAnswerVal(q.answer != null ? q.answer : (q.correctAnswer != null ? q.correctAnswer : "")),
+          explanation: q.explanation || q.analysis || ""
+        },
+        raw: ""
+      };
+    });
+  }
+
+  function handleImpText(text, sourceLabel){
+    var t = String(text || "").trim();
+    if (!t){ impFileMsg("内容是空的，没有解析出题目。", false); return; }
+    var items = null;
+    if (t.charAt(0) === "{" || t.charAt(0) === "["){
+      try { items = parseJSONQuestions(t); }
+      catch (e){
+        impFileMsg("这份内容看起来是 JSON，但格式有误，解析失败。检查一下括号和引号，或者改用纯文本模板导入。原有题库没有改动。", false);
+        return;
+      }
+    } else {
+      items = parseTextQuestions(t);
+    }
+    if (!items.length){
+      impFileMsg("没有解析出题目。按模板检查一下：每道题要有科目、题目、A–D 四个选项和答案，用一行 --- 分隔。", false);
+      return;
+    }
+    impFileMsg("", true);
+    startImpBatch(items, sourceLabel);
+  }
+  function startImpBatch(items, sourceLabel){
+    var defSubj = document.getElementById("impDefaultSubject").value;
+    items.forEach(function(it){
+      if (!String(it.data.subject || "").trim() && defSubj) it.data.subject = defSubj;
+      it.skipped = false;
+    });
+    importBatch = { items: items, source: sourceLabel };
+    refreshImpStatuses();
+    var panel = document.getElementById("impPreviewPanel");
+    panel.style.display = "";
+    var m = document.getElementById("impMsg");
+    m.className = "form-msg"; m.textContent = "";
+    renderImpList();
+    panel.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function impCounts(){
+    var c = { ok: 0, bad: 0, dup: 0, skip: 0, total: 0 };
+    if (!importBatch) return c;
+    importBatch.items.forEach(function(it){
+      c.total++;
+      if (it.status === "bad") c.bad++;
+      else if (it.status === "dup") c.dup++;
+      else if (it.skipped) c.skip++;
+      else c.ok++;
+    });
+    return c;
+  }
+  function renderImpList(){
+    var list = document.getElementById("impList");
+    list.innerHTML = "";
+    if (!importBatch){ document.getElementById("impSummary").textContent = ""; return; }
+    var c = impCounts();
+    document.getElementById("impSummary").textContent =
+      "来源：" + importBatch.source + "，共解析出 " + c.total + " 条 —— 可导入 " + c.ok + " 道"
+      + (c.dup ? "，与题库（或本批前文）重复 " + c.dup + " 道将自动跳过" : "")
+      + (c.bad ? "，有问题 " + c.bad + " 条（点「编辑」改好，或「移除」）" : "")
+      + (c.skip ? "，已手动跳过 " + c.skip + " 道" : "")
+      + "。点「确认导入」前不会写入题库。";
+    var confirmBtn = document.getElementById("btnImpConfirm");
+    confirmBtn.textContent = "确认导入 " + c.ok + " 道题";
+    confirmBtn.disabled = c.ok === 0;
+    importBatch.items.forEach(function(it, idx){
+      list.appendChild(buildImpItem(it, idx));
+    });
+  }
+  function buildImpItem(it, idx){
+    var item = document.createElement("div");
+    item.className = "qitem";
+    var sid = subjIdFromName(it.data.subject);
+    var chip = it.status === "bad" ? '<span class="imp-status bad">有问题</span>'
+      : it.status === "dup" ? '<span class="imp-status dup">重复 · 将跳过</span>'
+      : it.skipped ? '<span class="imp-status skip">已跳过</span>'
+      : '<span class="imp-status ok">可导入</span>';
+    var html = '<div class="meta">' + chip
+      + '<span class="tag">第 ' + (idx + 1) + ' 条</span>'
+      + (sid ? '<span class="tag subj" style="background:' + subjById(sid).color + '">' + esc(subjById(sid).name) + '</span>'
+             : (it.data.subject ? '<span class="tag">' + esc(it.data.subject) + '</span>' : ""))
+      + (it.data.chapter ? '<span class="tag">' + esc(it.data.chapter) + '</span>' : "")
+      + '</div>'
+      + '<div class="stem">' + esc(it.data.stem || "（无题干）") + '</div>';
+    if (it.status === "bad"){
+      html += '<div class="imp-err">' + it.errors.map(esc).join("；") + '</div>';
+      if (it.raw) html += '<div class="imp-raw">' + esc(it.raw) + '</div>';
+    } else {
+      var lines = it.data.options.map(function(o, i){
+        var s = LETTERS[i] + "．" + esc(o);
+        return i === it.data.answer ? "<b>" + s + " ✓</b>" : s;
+      });
+      html += '<div class="imp-opts">' + lines.join("\n") + '</div>';
+      if (it.data.explanation) html += '<div class="ans">解析：' + esc(it.data.explanation) + '</div>';
+    }
+    html += '<div class="row-actions">'
+      + (it.status === "ok" ? '<button class="btn small" type="button" data-skip>' + (it.skipped ? "恢复导入" : "跳过这道") + '</button>' : "")
+      + '<button class="btn small" type="button" data-edit>编辑</button>'
+      + '<button class="btn small danger" type="button" data-remove>移除</button>'
+      + '</div>'
+      + '<div class="imp-edit"></div>';
+    item.innerHTML = html;
+
+    var editBox = item.querySelector(".imp-edit");
+    item.querySelector("[data-edit]").addEventListener("click", function(){
+      if (editBox.classList.contains("open")){ editBox.classList.remove("open"); editBox.innerHTML = ""; return; }
+      var d = it.data;
+      var subjOpts = SUBJECTS.map(function(s){
+        return '<option value="' + s.id + '"' + (sid === s.id ? " selected" : "") + '>' + s.name + '</option>';
+      }).join("");
+      var ansOpts = LETTERS.map(function(L, i){
+        return '<option value="' + i + '"' + (d.answer === i ? " selected" : "") + '>' + L + '</option>';
+      }).join("");
+      var optInputs = [0, 1, 2, 3].map(function(i){
+        return '<div class="opt-input"><span class="letter">' + LETTERS[i] + '</span>'
+          + '<input type="text" data-f="opt' + i + '" value="' + esc(d.options && d.options[i] ? d.options[i] : "") + '"></div>';
+      }).join("");
+      editBox.innerHTML =
+          '<div class="grid2">'
+        +   '<div class="field"><label>科目</label><select data-f="subject">' + subjOpts + '</select></div>'
+        +   '<div class="field"><label>章节</label><input type="text" data-f="chapter" value="' + esc(d.chapter || "") + '"></div>'
+        + '</div>'
+        + '<div class="field"><label>题干</label><textarea rows="3" data-f="stem">' + esc(d.stem || "") + '</textarea></div>'
+        + '<div class="field"><label>四个选项</label><div style="display:flex;flex-direction:column;gap:9px;">' + optInputs + '</div></div>'
+        + '<div class="field"><label>正确答案</label><select data-f="answer" style="max-width:140px;">' + ansOpts + '</select></div>'
+        + '<div class="field"><label>解析</label><textarea rows="2" data-f="expl">' + esc(d.explanation || "") + '</textarea></div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+        +   '<button class="btn small primary" type="button" data-save>保存修改</button>'
+        +   '<button class="btn small ghost" type="button" data-cancel>取消</button>'
+        + '</div>';
+      editBox.classList.add("open");
+      editBox.querySelector("[data-cancel]").addEventListener("click", function(){
+        editBox.classList.remove("open"); editBox.innerHTML = "";
+      });
+      editBox.querySelector("[data-save]").addEventListener("click", function(){
+        it.data = {
+          subject: editBox.querySelector('[data-f="subject"]').value,
+          chapter: editBox.querySelector('[data-f="chapter"]').value.trim(),
+          stem: editBox.querySelector('[data-f="stem"]').value.trim(),
+          options: [0, 1, 2, 3].map(function(i){ return editBox.querySelector('[data-f="opt' + i + '"]').value.trim(); }),
+          answer: parseInt(editBox.querySelector('[data-f="answer"]').value, 10),
+          explanation: editBox.querySelector('[data-f="expl"]').value.trim()
+        };
+        refreshImpStatuses();
+        renderImpList();
+        showToast(it.status === "bad" ? "还有问题没改好，看红色提示" : it.status === "dup" ? "改好了，但和已有题重复，将跳过" : "已更新这条");
+      });
+    });
+    var skipBtn = item.querySelector("[data-skip]");
+    if (skipBtn) skipBtn.addEventListener("click", function(){
+      it.skipped = !it.skipped;
+      refreshImpStatuses();
+      renderImpList();
+    });
+    item.querySelector("[data-remove]").addEventListener("click", function(){
+      importBatch.items.splice(idx, 1);
+      refreshImpStatuses();
+      renderImpList();
+    });
+    return item;
+  }
+
+  document.getElementById("impFile").addEventListener("change", function(ev){
+    var f = ev.target.files && ev.target.files[0];
+    ev.target.value = "";
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function(){ handleImpText(String(reader.result || ""), "文件「" + (f.name || "未命名") + "」"); };
+    reader.onerror = function(){ impFileMsg("读取这个文件失败，换个文件或改用粘贴导入试试。", false); };
+    reader.readAsText(f);
+  });
+  document.getElementById("btnImpParse").addEventListener("click", function(){
+    var text = document.getElementById("impPaste").value;
+    if (!text.trim()){ showToast("先把题目内容粘贴到输入框里"); return; }
+    impFileMsg("", true);
+    handleImpText(text, "粘贴内容");
+  });
+  document.getElementById("btnImpClearPaste").addEventListener("click", function(){
+    document.getElementById("impPaste").value = "";
+    document.getElementById("impPaste").focus();
+  });
+  document.getElementById("btnCopyTpl").addEventListener("click", function(){
+    var text = document.getElementById("impTpl").textContent;
+    function done(){ showToast("模板已复制，粘到文档里照着填就行"); }
+    function fallback(){
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); done(); }
+      catch (e){ showToast("复制失败，长按模板文字手动复制"); }
+      document.body.removeChild(ta);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else fallback();
+  });
+  document.getElementById("btnImpConfirm").addEventListener("click", function(){
+    if (!importBatch) return;
+    var n = 0;
+    importBatch.items.forEach(function(it){
+      if (it.status === "ok" && !it.skipped){
+        store.questions.push({
+          id: uid(), subject: subjIdFromName(it.data.subject),
+          chapter: String(it.data.chapter || "").trim(),
+          stem: String(it.data.stem || "").trim(),
+          options: it.data.options.map(function(o){ return String(o == null ? "" : o).trim(); }),
+          answer: it.data.answer,
+          explanation: String(it.data.explanation || "").trim(),
+          createdAt: Date.now()
+        });
+        n++;
+      }
+    });
+    if (!n) return;
+    save();
+    importBatch = null;
+    document.getElementById("impList").innerHTML = "";
+    document.getElementById("impSummary").textContent = "";
+    var btn = document.getElementById("btnImpConfirm");
+    btn.textContent = "确认导入"; btn.disabled = true;
+    var m = document.getElementById("impMsg");
+    m.textContent = "导入完成：新增 " + n + " 道题，题库现在共 " + store.questions.length + " 道。去刷题页就能练，或到题库页检查。";
+    m.className = "form-msg show ok";
+    renderImportHome();
+    showToast("已导入 " + n + " 道题");
+  });
+  document.getElementById("btnImpDiscard").addEventListener("click", function(){
+    importBatch = null;
+    document.getElementById("impPreviewPanel").style.display = "none";
+    document.getElementById("impList").innerHTML = "";
+    showToast("已放弃这次导入，题库没有改动");
+  });
+
+  /* ---------------- 下载离线文件 ---------------- */
+  function dateStamp(){
+    var d = new Date();
+    function p(n){ return (n<10?"0":"")+n; }
+    return d.getFullYear() + p(d.getMonth()+1) + p(d.getDate());
+  }
+  function downloadBlob(blob, name){
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+  }
+  function downloadOffline(){
+    var clone = document.documentElement.cloneNode(true);
+    // 把克隆里的动态区域清回初始状态，保证下载的文件打开时干净地从本地数据渲染
+    var dyn = clone.querySelectorAll("#subjGrid,#wrongList,#libList,#qOpts,#qTags,#impList");
+    dyn.forEach(function(el){ el.innerHTML = ""; });
+    var ipp = clone.querySelector("#impPreviewPanel");
+    if (ipp) ipp.style.display = "none";
+    var sp = clone.querySelector("#scratchPanel");
+    if (sp) sp.setAttribute("hidden", "");
+    var pc = clone.querySelector("#practiceCard");
+    if (pc) pc.classList.remove("showcard", "has-scratch");
+    var html = "<!DOCTYPE html>\n" + clone.outerHTML;
+    downloadBlob(new Blob([html], { type: "text/html;charset=utf-8" }), "高中刷题库-离线版.html");
+    showToast("离线文件已下载，去「文件」App 里点开就能用");
+  }
+  document.getElementById("btnDownloadTop").addEventListener("click", downloadOffline);
+  document.getElementById("btnDownloadHero").addEventListener("click", downloadOffline);
+  document.getElementById("btnDownloadLib").addEventListener("click", downloadOffline);
+  document.getElementById("btnGoAdd").addEventListener("click", function(){ go("add"); });
+
+  /* ---------------- 工具 ---------------- */
+  var toastTimer = null;
+  function showToast(msg){
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2600);
+  }
+  function bindGoto(scope){
+    scope.querySelectorAll("[data-goto]").forEach(function(b){
+      b.addEventListener("click", function(){ go(b.dataset.goto); });
+    });
+  }
+  document.querySelectorAll("[data-goto]").forEach(function(b){
+    b.addEventListener("click", function(){ go(b.dataset.goto); });
+  });
+
+  /* ---------------- 初始化 ---------------- */
+  load();
+  fillSubjectSelect(document.getElementById("pfSubject"), true);
+  fillSubjectSelect(document.getElementById("afSubject"), false);
+  fillSubjectSelect(document.getElementById("libSubject"), true);
+  document.getElementById("pfSubject").value = "";
+  buildTabs();
+  go("home");
+  syncRemoteQuestions();
+  if (!storageOK) showToast("当前浏览器不允许本地存储，数据刷新后会丢失，请用导出备份保存");
+})();
+</script>
+</body>
+</html>
