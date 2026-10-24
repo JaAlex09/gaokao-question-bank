@@ -736,8 +736,8 @@
         if (!stem || !subj) return;
         var key = subj + "|" + (q.passage_id||"") + "|" + stem.replace(/\s+/g," ").trim();
         var ans = String(q.answer || "").trim().toUpperCase().charAt(0);
-        var rec = { subject: subj, chapter: q.chapter || "", type: q.type || "choice", stem: stem, options: (q.options||[]).slice(0,4), answer: "ABCD".indexOf(ans), answer_text: q.answer_text || "", explanation: q.explanation || "", difficulty: (q.difficulty>=1 && q.difficulty<=5) ? q.difficulty : 3, source: q.source || "generated practice", animation: q.animation || null, image_svg: q.image_svg || "", image_alt: q.image_alt || "", passage: q.passage || "", passage_id: q.passage_id || "", passage_title: q.passage_title || "", passage_q_index: q.passage_q_index || 0, passage_q_total: q.passage_q_total || 0 };
-        if (seen[key]){ var ex = seen[key]; ex.type=rec.type; ex.chapter=rec.chapter; ex.options=rec.options; ex.answer=rec.answer; ex.answer_text=rec.answer_text; ex.explanation=rec.explanation; ex.difficulty=rec.difficulty; ex.source=rec.source; ex.animation=rec.animation; ex.image_svg=rec.image_svg; ex.image_alt=rec.image_alt; ex.passage=rec.passage; ex.passage_id=rec.passage_id; ex.passage_title=rec.passage_title; ex.passage_q_index=rec.passage_q_index; ex.passage_q_total=rec.passage_q_total; updated++; }
+        var rec = { subject: subj, chapter: q.chapter || "", type: q.type || "choice", stem: stem, options: (q.options||[]).slice(0,4), answer: "ABCD".indexOf(ans), answer_text: q.answer_text || "", explanation: q.explanation || "", difficulty: (q.difficulty>=1 && q.difficulty<=5) ? q.difficulty : 3, source: q.source || "generated practice", animation: q.animation || null, explanation_animation: q.explanation_animation || null, image_svg: q.image_svg || "", image_alt: q.image_alt || "", explanation_image_svg: q.explanation_image_svg || "", explanation_image_alt: q.explanation_image_alt || "", passage: q.passage || "", passage_id: q.passage_id || "", passage_title: q.passage_title || "", passage_q_index: q.passage_q_index || 0, passage_q_total: q.passage_q_total || 0 };
+        if (seen[key]){ var ex = seen[key]; ex.type=rec.type; ex.chapter=rec.chapter; ex.options=rec.options; ex.answer=rec.answer; ex.answer_text=rec.answer_text; ex.explanation=rec.explanation; ex.difficulty=rec.difficulty; ex.source=rec.source; ex.animation=rec.animation; ex.explanation_animation=rec.explanation_animation; ex.image_svg=rec.image_svg; ex.image_alt=rec.image_alt; ex.explanation_image_svg=rec.explanation_image_svg; ex.explanation_image_alt=rec.explanation_image_alt; ex.passage=rec.passage; ex.passage_id=rec.passage_id; ex.passage_title=rec.passage_title; ex.passage_q_index=rec.passage_q_index; ex.passage_q_total=rec.passage_q_total; updated++; }
         else { rec.id = uid(); store.questions.push(rec); seen[key]=rec; added++; }
       });
       if (added || updated){ save(); if (currentView === "home") renderHome(); if (currentView === "topics") renderTopics(); }
@@ -1066,6 +1066,40 @@
     if (ok) practice.right++; else practice.wrong++;
     save();
   }
+
+  /* 解析图像/动画：只在答完题后显示。调用点只有 showVerdict（已判分）和简答题的“提交后对照参考答案”处，
+     绝不在 showQuestion（答题前）调用。题目本身的 image_svg 仍在 showQuestion 中照常显示，不受影响。 */
+  function safeSvgString(svg){
+    if (!svg || /<script|on\w+\s*=|javascript:|href\s*=|<foreignObject|<iframe|<image|<object|<embed/i.test(svg)) return "";
+    var m = String(svg).match(/<svg[\s\S]*<\/svg>/i);
+    if (!m) return "";
+    var tags = m[0].match(/<\/?([a-zA-Z]+)/g) || [];
+    var allowed = ["svg","g","line","circle","rect","polygon","polyline","path","text","ellipse"];
+    var ok = tags.every(function(tag){ var name = tag.replace(/<\/?/,"").toLowerCase(); return allowed.indexOf(name) >= 0; });
+    return ok ? m[0] : "";
+  }
+  function renderExplanationVisuals(q){
+    var v = document.getElementById("qVerdict"); if (!v) return;
+    var oldA = document.getElementById("animWrap"); if (oldA) oldA.remove();
+    var oldI = document.getElementById("explImgWrap"); if (oldI) oldI.remove();
+    stopAnim();
+    /* 解析动画：优先用 explanation_animation；旧题只有 animation 字段时，animation 即视为解析动画，同样只在答后显示 */
+    var anim = q.explanation_animation || q.animation;
+    if (anim && anim.kind){
+      var aw = document.createElement("div"); aw.id="animWrap"; aw.style="margin-top:12px;border:1px solid #eee;border-radius:10px;padding:10px;background:#fff;";
+      aw.innerHTML = '<div style="font-size:13px;color:#666;margin-bottom:6px;">▶ 解析动画：'+esc(anim.title||anim.kind)+'（页面自绘，无需联网，答完题后显示）</div><canvas id="animCanvas" width="320" height="200" style="width:100%;max-width:360px;height:auto;background:#faf8f3;border-radius:8px;"></canvas>';
+      v.appendChild(aw);
+      startAnim(anim.kind, anim.title);
+    }
+    if (q.explanation_image_svg){
+      var safe = safeSvgString(q.explanation_image_svg);
+      var iw = document.createElement("div"); iw.id="explImgWrap"; iw.className="q-img";
+      if (safe) iw.innerHTML = safe;
+      if (q.explanation_image_alt){ var d = document.createElement("div"); d.className="q-img-alt"; d.textContent = "解析图示说明：" + q.explanation_image_alt; iw.appendChild(d); }
+      else if (!safe){ iw.textContent = "（解析含图示，图示未能渲染）"; }
+      v.appendChild(iw);
+    }
+  }
   function showVerdict(ok, correctText){
     var q = practice.queue[practice.idx];
     document.getElementById("qScore").textContent = "对 " + practice.right + " · 错 " + practice.wrong;
@@ -1075,6 +1109,7 @@
       + (q.explanation ? '<div class="expl">' + esc(q.explanation) + '</div>' : "")
       + (!ok ? '<div class="expl" style="margin-top:4px;">已自动收进错题本。</div>' : "")
       + (ok && practice.wrongMode ? '<div class="expl" style="margin-top:4px;">已从错题本移出。</div>' : "");
+    renderExplanationVisuals(q);
     var next = document.getElementById("btnNextQ");
     next.textContent = practice.idx + 1 >= practice.queue.length ? "看结果 →" : "下一题 →";
     next.style.display = "";
@@ -1159,14 +1194,10 @@
     var v = document.getElementById("qVerdict");
     v.className = "verdict"; v.innerHTML = "";
     document.getElementById("btnNextQ").style.display = "none";
-    // animation canvas, only when the question carries one
-    var oldAnim = document.getElementById("animWrap"); if (oldAnim) oldAnim.remove();
-    if (q.animation && q.animation.kind){
-      var aw = document.createElement("div"); aw.id="animWrap"; aw.style="margin-top:12px;border:1px solid #eee;border-radius:10px;padding:10px;background:#fff;";
-      aw.innerHTML = '<div style="font-size:13px;color:#666;margin-bottom:6px;">▶ 动画演示：'+esc(q.animation.title||q.animation.kind)+'（页面自绘，无需联网）</div><canvas id="animCanvas" width="320" height="200" style="width:100%;max-width:360px;height:auto;background:#faf8f3;border-radius:8px;"></canvas>';
-      var stemWrap = document.querySelector(".q-stemwrap"); if (stemWrap) stemWrap.appendChild(aw);
-      startAnim(q.animation.kind, q.animation.title);
-    }
+    // 解析动画/解析图：答题前不显示。旧代码曾在此直接渲染 animation，已改为只在 showVerdict（答完题后）
+    // 通过 renderExplanationVisuals() 渲染到解析区；题目本身的 image_svg 仍在上方照常显示。
+    var oldAnim2 = document.getElementById("animWrap"); if (oldAnim2) oldAnim2.remove();
+    var oldExplImg = document.getElementById("explImgWrap"); if (oldExplImg) oldExplImg.remove();
     scratchSyncToQuestion(q.id);
   }
   function normAns(s){ return String(s||"").trim().replace(/\s+/g,"").replace(/[，。；、]/g,"").toLowerCase(); }
@@ -1181,6 +1212,7 @@
       v.innerHTML = '<div class="vt">参考答案如下，请自评：</div><div class="expl"><b>参考答案：</b>'+esc(q.answer_text||"")+'</div>'
         + (q.explanation ? '<div class="expl">'+esc(q.explanation)+'</div>' : "")
         + '<div style="display:flex;gap:8px;margin-top:10px;"><button class="btn primary" id="btnSelfOk" type="button">我答对了</button><button class="btn" id="btnSelfBad" type="button">我答错了</button></div>';
+      renderExplanationVisuals(q);
       document.getElementById("btnSelfOk").addEventListener("click", function(){ practice.answered=true; recordResult(true); showVerdict(true, ""); });
       document.getElementById("btnSelfBad").addEventListener("click", function(){ practice.answered=true; recordResult(false); showVerdict(false, q.answer_text||""); });
       return;
