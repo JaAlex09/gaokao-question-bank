@@ -477,6 +477,13 @@
         <button class="btn primary" id="btnStartPractice" type="button">开始刷题</button>
       </div>
       <p class="desc" style="margin-top:12px;">选题后立即判对错并显示解析；答错的题会自动收进错题本。做题时可打开草稿板，用 Apple Pencil 边看题边打草稿，草稿按题保存在本机。</p>
+      <div id="practiceResumeBox" style="display:none;margin-top:12px;padding:12px;border:1px solid #e5e0d5;border-radius:10px;background:#f7f5ef;">
+        <span id="practiceResumeText"></span>
+        <div style="display:flex;gap:9px;margin-top:9px;flex-wrap:wrap;">
+          <button class="btn primary" id="btnResumePractice" type="button">继续上次</button>
+          <button class="btn" id="btnClearResume" type="button">从头开始</button>
+        </div>
+      </div>
     </div>
 
     <div class="panel" id="practiceEmpty" style="display:none;">
@@ -692,7 +699,7 @@
   var LETTERS = ["A","B","C","D"];
   var LS_KEY = "gaozhong_offline_tiku_v1";
 
-  var store = { questions: [], history: [], wrongIds: [], drafts: {} };
+  var store = { questions: [], history: [], wrongIds: [], drafts: {}, practiceResume: null };
   var storageOK = true;
 
   function subjById(id){
@@ -711,6 +718,7 @@
         if (d && Array.isArray(d.history)) store.history = d.history;
         if (d && Array.isArray(d.wrongIds)) store.wrongIds = d.wrongIds;
         if (d && d.drafts && typeof d.drafts === "object") store.drafts = d.drafts;
+        if (d && d.practiceResume && typeof d.practiceResume === "object") store.practiceResume = d.practiceResume;
       }
     } catch(e){ storageOK = false; }
   }
@@ -718,6 +726,17 @@
     if (!storageOK) return;
     try { localStorage.setItem(LS_KEY, JSON.stringify(store)); }
     catch(e){ storageOK = false; showToast("浏览器本地存储不可用，本次数据可能无法保留，请导出备份"); }
+  }
+  function savePracticeProgress(){
+    if (!practice) return;
+    store.practiceResume = {
+      queueIds: practice.queue.map(function(q){ return q.id; }),
+      idx: practice.idx,
+      right: practice.right,
+      wrong: practice.wrong,
+      wrongMode: !!practice.wrongMode
+    };
+    save();
   }
   /* 联网版：从同目录 questions.json 拉取最新题，按科目+题干去重合并；离线打开拉取失败时静默保留本地题
      远程为准的清理：同步成功后，删除本地已失效的远程题（例如已从线上删除的 10 道旧英语阅读题），
@@ -1040,6 +1059,27 @@
       hidePracticeCard();
       document.getElementById("practiceResult").style.display = "none";
       document.getElementById("practiceEmpty").style.display = store.questions.length ? "none" : "";
+      var rb = document.getElementById("practiceResumeBox");
+      if (rb){
+        var r = store.practiceResume;
+        var qlist = [];
+        var valid = false;
+        if (r && Array.isArray(r.queueIds) && r.queueIds.length){
+          qlist = r.queueIds.map(function(id){
+            for (var i=0;i<store.questions.length;i++) if (store.questions[i].id===id) return store.questions[i];
+            return null;
+          });
+          valid = qlist.indexOf(null) < 0 && r.idx > 0 && r.idx < qlist.length;
+        }
+        if (valid){
+          var firstSubj = subjById(qlist[0].subject);
+          document.getElementById("practiceResumeText").textContent = "上次刷到第 " + (r.idx+1) + " / " + qlist.length + " 题（" + firstSubj.name + "），要继续吗？";
+          rb.style.display = "";
+        } else {
+          if (r){ store.practiceResume = null; save(); }
+          rb.style.display = "none";
+        }
+      }
     }
   }
   function showPracticeCard(){
@@ -1052,13 +1092,18 @@
     c.classList.remove("showcard");
     c.style.display = "none";
   }
-  function startPractice(queue, wrongMode){
+  function startPractice(queue, wrongMode, resumeState){
     if (!queue.length){
       document.getElementById("practiceEmpty").style.display = "";
       hidePracticeCard();
       return;
     }
-    practice = { queue: queue, idx: 0, right: 0, wrong: 0, answered: false, wrongMode: !!wrongMode };
+    if (resumeState){
+      practice = { queue: queue, idx: resumeState.idx, right: resumeState.right || 0, wrong: resumeState.wrong || 0, answered: false, wrongMode: !!resumeState.wrongMode };
+    } else {
+      store.practiceResume = null; save();
+      practice = { queue: queue, idx: 0, right: 0, wrong: 0, answered: false, wrongMode: !!wrongMode };
+    }
     document.getElementById("practiceSetup").style.display = "none";
     document.getElementById("practiceEmpty").style.display = "none";
     document.getElementById("practiceResult").style.display = "none";
@@ -1109,6 +1154,7 @@
     if (!ok && wi < 0) store.wrongIds.push(q.id);
     if (ok && wi >= 0) store.wrongIds.splice(wi, 1);
     if (ok) practice.right++; else practice.wrong++;
+    savePracticeProgress();
     save();
   }
 
@@ -1165,6 +1211,7 @@
     var q = practice.queue[practice.idx];
     var s = subjById(q.subject);
     practice.answered = false;
+    savePracticeProgress();
     document.getElementById("qPos").textContent = "第 " + (practice.idx+1) + " / " + practice.queue.length + " 题";
     document.getElementById("qBar").style.width = Math.round(practice.idx/practice.queue.length*100) + "%";
     document.getElementById("qScore").textContent = "对 " + practice.right + " · 错 " + practice.wrong;
@@ -1294,6 +1341,7 @@
       pct === 100 ? "全对，漂亮！这一轮的状态很好。" :
       pct >= 70 ? "正确率 " + pct + "%，错的 " + practice.wrong + " 道已经收进错题本，趁热重练一遍记得更牢。" :
       "正确率 " + pct + "%。别急，先看错题本里的解析，把错因弄清楚再刷下一轮。";
+    store.practiceResume = null; save();
     practice = null;
     document.getElementById("practiceSetup").style.display = "";
     renderPracticeSetup();
@@ -1330,6 +1378,7 @@
   });
   document.getElementById("btnQuitPractice").addEventListener("click", function(){
     if (typeof scratchPersist === "function") scratchPersist();
+    if (practice) savePracticeProgress();
     practice = null;
     hidePracticeCard();
     document.getElementById("practiceResult").style.display = "none";
@@ -1342,6 +1391,24 @@
     renderPracticeSetup();
   });
 
+  document.getElementById("btnResumePractice").addEventListener("click", function(){
+    var r = store.practiceResume;
+    if (!r || !Array.isArray(r.queueIds) || !r.queueIds.length) return;
+    var queue = [];
+    for (var i=0;i<r.queueIds.length;i++){
+      var found = null;
+      for (var j=0;j<store.questions.length;j++) if (store.questions[j].id===r.queueIds[i]){ found = store.questions[j]; break; }
+      if (!found){ showToast("上次的题目已有变化，请重新开始刷题"); store.practiceResume = null; save(); renderPracticeSetup(); return; }
+      queue.push(found);
+    }
+    if (!(r.idx > 0 && r.idx < queue.length)){ store.practiceResume = null; save(); renderPracticeSetup(); return; }
+    startPractice(queue, !!r.wrongMode, r);
+  });
+  document.getElementById("btnClearResume").addEventListener("click", function(){
+    store.practiceResume = null; save();
+    document.getElementById("practiceResumeBox").style.display = "none";
+    showToast("已清除上次进度，可重新开始刷题");
+  });
   /* ---------------- 草稿板（Canvas + Pointer Events，适配 Apple Pencil） ---------------- */
   var scratchCanvas = document.getElementById("scratchCanvas");
   var sctx = scratchCanvas.getContext("2d");
