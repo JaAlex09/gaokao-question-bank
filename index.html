@@ -384,6 +384,14 @@
   }
   /* 滚动停稳时不被底部固定导航遮住 */
   .subj,.qitem,.panel,button.btn,nav.bottombar{scroll-margin-bottom:120px;}
+
+  #homeWallpaperBar{position:fixed;left:12px;right:12px;bottom:76px;z-index:39;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;background-size:cover;background-position:center;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.28)}
+  #homeWallpaperBar:before{content:"";position:absolute;inset:0;border-radius:16px;background:linear-gradient(90deg,rgba(0,0,0,.55),rgba(0,0,0,.15))}
+  #homeWallpaperBar>*{position:relative}
+  #homeWallpaperBar .wb-text{flex:1;text-align:left;line-height:1.4}
+  #homeWallpaperBar .wb-text b{display:block;font-size:15px}
+  #homeWallpaperBar .wb-text span{font-size:12.5px;opacity:.92}
+  @media (min-width:860px){ #homeWallpaperBar{left:auto;right:20px;bottom:20px;width:380px} }
 </style>
 </head>
 <body>
@@ -407,6 +415,11 @@
 
   <!-- ================= 首页 ================= -->
   <section class="view" id="view-home">
+    <div class="panel" id="homeCheckinCard" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:180px;text-align:left"><div style="font-weight:700;font-size:16px">📅 今日打卡</div><div id="homeCheckinText" style="font-size:13.5px;color:var(--ink2);margin-top:4px"></div></div>
+      <button class="btn primary" id="btnHomeCheck" type="button">今日签到</button>
+    </div>
+
     <div class="hero">
       <h2>六科题库都在这儿，<br>录一道，刷一道。</h2>
       <p>这是一个联网版题库：题目每次打开时从线上拉取最新版，做题记录和错题本存在这台设备的浏览器里，不用登录也能用。</p>
@@ -688,6 +701,7 @@
   <footer class="foot">高中刷题库 · 联网版 —— 题目从线上拉取，打开即最新；做题记录保存在本机浏览器中。</footer>
 </main>
 
+<div id="homeWallpaperBar" style="display:none"><div class="wb-text"><b id="wbTitle">今日壁纸</b><span id="wbSub">自然风光 · 签到后解锁下载</span></div><button class="btn primary" id="btnBarCheck" type="button">签到</button><a class="btn" href="wallpaper.html" style="text-decoration:none;background:rgba(255,255,255,.9);color:#222">壁纸页</a></div>
 <nav class="bottombar" id="tabsBottom" aria-label="主导航"></nav>
 <div class="toast" id="toast"></div>
 
@@ -853,6 +867,7 @@
   }
   function go(view, arg){
     currentView = view;
+    var _bar=document.getElementById("homeWallpaperBar"); if(_bar) _bar.style.display=(view==="home")?"flex":"none";
     var views = document.querySelectorAll(".view");
     for (var i=0;i<views.length;i++) views[i].classList.remove("on");
     document.getElementById("view-"+view).classList.add("on");
@@ -899,7 +914,39 @@
   }
 
   /* ---------------- 首页 ---------------- */
+  var WALLPAPER_LIST=[
+    {u:"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80",t:"山野"},
+    {u:"https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=80",t:"森林"},
+    {u:"https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80",t:"云雾山间"},
+    {u:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",t:"海滩"},
+    {u:"https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=1200&q=80",t:"海浪"},
+    {u:"https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=1200&q=80",t:"田野日落"},
+    {u:"https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=1200&q=80",t:"林间阳光"},
+    {u:"https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80",t:"高山湖泊"},
+    {u:"https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80",t:"雪山星空"},
+    {u:"https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=1200&q=80",t:"湖畔黄昏"},
+    {u:"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",t:"阳光山野"},
+    {u:"https://images.unsplash.com/photo-1433086966358-54859d0ed716?auto=format&fit=crop&w=1200&q=80",t:"瀑布"},
+    {u:"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",t:"湖畔山居"},
+    {u:"https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?auto=format&fit=crop&w=1200&q=80",t:"湖面晚霞"}
+  ];
+  function wallpaperToday(){var n=new Date();var doy=Math.floor((n-new Date(n.getFullYear(),0,0))/86400000);return WALLPAPER_LIST[doy % WALLPAPER_LIST.length];}
+  function checkinDays(){try{var v=JSON.parse(localStorage.getItem("daily_wallpaper_checkin_v1")||"[]");return Array.isArray(v)?v:[]}catch(e){return[]}}
+  function checkinStreak(days){if(!days.length)return 0;var set={};days.forEach(function(d){set[d]=1});function ds(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}var cur=new Date();var s=0;if(!set[ds(cur)])cur.setDate(cur.getDate()-1);while(set[ds(cur)]){s++;cur.setDate(cur.getDate()-1)}return s}
+  function doCheckin(){var days=checkinDays();var n=new Date();var t=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0");if(days.indexOf(t)<0){days.push(t);days.sort();try{localStorage.setItem("daily_wallpaper_checkin_v1",JSON.stringify(days))}catch(e){}}renderHomeCheckin();showToast("今日打卡成功，连续 "+checkinStreak(days)+" 天");}
+  function renderHomeCheckin(){
+    var bar=document.getElementById("homeWallpaperBar"); if(!bar) return;
+    if(!bar.dataset.bound){bar.dataset.bound="1";document.getElementById("btnHomeCheck").addEventListener("click",doCheckin);document.getElementById("btnBarCheck").addEventListener("click",doCheckin);}
+    var w=wallpaperToday(); bar.style.backgroundImage="url('"+w.u+"')"; bar.style.display="flex";
+    var days=checkinDays(); var n=new Date(); var t=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0"); var checked=days.indexOf(t)>=0; var s=checkinStreak(days);
+    document.getElementById("wbTitle").textContent="今日壁纸 · "+w.t;
+    document.getElementById("wbSub").textContent=checked?("已签到，连续 "+s+" 天 · 点壁纸页可下载"):"签到后解锁今日壁纸下载";
+    document.getElementById("homeCheckinText").textContent=(n.getMonth()+1)+"/"+n.getDate()+" · 连续 "+s+" 天 · 累计 "+days.length+" 天";
+    var b1=document.getElementById("btnHomeCheck"); b1.textContent=checked?"今日已打卡 ✓":"今日签到"; b1.disabled=checked;
+    var b2=document.getElementById("btnBarCheck"); b2.textContent=checked?"已打卡 ✓":"签到"; b2.disabled=checked;
+  }
   function renderHome(){
+    renderHomeCheckin();
     var all = statsFor(null);
     document.getElementById("stTotal").textContent = all.total;
     document.getElementById("stDone").textContent = all.done;
