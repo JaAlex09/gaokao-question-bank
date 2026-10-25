@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>每日壁纸 · 签到</title>
+<style>
+*{box-sizing:border-box} html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:#fff}
+.bg{position:fixed;inset:0;background:#9db8c4 center/cover no-repeat;transition:opacity .4s}
+.bg:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.18),rgba(0,0,0,.05) 45%,rgba(0,0,0,.32))}
+.wrap{position:relative;min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px 40px;text-align:center}
+.card{background:rgba(255,255,255,.88);color:#222;border-radius:20px;padding:22px 26px;box-shadow:0 12px 40px rgba(0,0,0,.25);backdrop-filter:blur(6px)}
+.card .ico{font-size:26px}.card h1{font-size:19px;margin:8px 0 2px}.card p{margin:0;color:#666;font-size:14px}
+button,a.btn{border:0;border-radius:999px;padding:11px 22px;font-size:16px;cursor:pointer;text-decoration:none;display:inline-block}
+.primary{background:#222;color:#fff}.ghost{background:rgba(255,255,255,.85);color:#222}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+.stats{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;justify-content:center}
+.stat{background:rgba(255,255,255,.82);color:#222;border-radius:14px;padding:10px 16px;min-width:118px}
+.stat b{font-size:20px;display:block}.stat span{font-size:13px;color:#666}
+.badge{margin-top:14px;background:rgba(0,0,0,.38);border-radius:999px;padding:7px 14px;font-size:14px}
+.small{margin-top:18px;font-size:13px;color:rgba(255,255,255,.92);text-shadow:0 1px 6px rgba(0,0,0,.4);max-width:560px;line-height:1.6}
+.small a{color:#fff}
+</style>
+</head>
+<body>
+<div class="bg" id="bg"></div>
+<div class="wrap">
+  <div class="card">
+    <div class="ico">📅</div>
+    <h1 id="checkTitle">签到</h1>
+    <p id="checkDate"></p>
+    <div style="margin-top:14px"><button class="primary" id="btnCheck" type="button">今日签到</button></div>
+    <p id="checkMsg" style="margin-top:10px;color:#2e7d32"></p>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="stStreak">0</b><span>连续签到（天）</span></div>
+    <div class="stat"><b id="stTotal">0</b><span>累计签到（天）</span></div>
+    <div class="stat"><b id="stToday">今日壁纸</b><span id="stTheme">自然风光</span></div>
+  </div>
+  <div class="badge" id="badge">签到后解锁今日壁纸下载</div>
+  <div class="row">
+    <a class="btn ghost" id="btnDownload" href="#" target="_blank" rel="noopener" style="display:none">下载今日壁纸</a>
+    <button class="ghost" id="btnNext" type="button">换一张看看</button>
+    <a class="btn ghost" href="./">回刷题库</a>
+  </div>
+  <p class="small">每天按日期自动换一张自然风光壁纸，换一张只是预览，不会改变今天的日期壁纸。图片来自 Unsplash 免费图库，可免费使用；点下载后会在新页打开图片，在 iPad 上长按图片即可保存到相册。签到记录只存在你这台设备的浏览器里，换设备不会同步。</p>
+  <p class="small" id="credit"></p>
+</div>
+<script>
+var WALLS=[
+ {u:"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80",t:"山野"},
+ {u:"https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=80",t:"森林"},
+ {u:"https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1600&q=80",t:"云雾山间"},
+ {u:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80",t:"海滩"},
+ {u:"https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=1600&q=80",t:"海浪"},
+ {u:"https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=1600&q=80",t:"田野日落"},
+ {u:"https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=1600&q=80",t:"林间阳光"},
+ {u:"https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80",t:"高山湖泊"},
+ {u:"https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1600&q=80",t:"雪山星空"},
+ {u:"https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=1600&q=80",t:"湖畔黄昏"},
+ {u:"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80",t:"阳光山野"},
+ {u:"https://images.unsplash.com/photo-1433086966358-54859d0ed716?auto=format&fit=crop&w=1600&q=80",t:"瀑布"},
+ {u:"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80",t:"湖畔山居"},
+ {u:"https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?auto=format&fit=crop&w=1600&q=80",t:"湖面晚霞"}
+];
+var KEY="daily_wallpaper_checkin_v1";
+function todayStr(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function load(){try{var v=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(v)?v:[]}catch(e){return[]}}
+function save(v){try{localStorage.setItem(KEY,JSON.stringify(v))}catch(e){}}
+function streakOf(days){
+  if(!days.length) return 0;
+  var set={}; days.forEach(function(d){set[d]=1});
+  var cur=new Date(); var s=0;
+  if(!set[todayStr(cur)]) cur.setDate(cur.getDate()-1);
+  while(set[todayStr(cur)]){s++; cur.setDate(cur.getDate()-1);}
+  return s;
+}
+function badgeFor(s){
+  if(s>=30) return "🏅 连续 30 天 · 坚持者";
+  if(s>=14) return "🌿 连续 14 天 · 山野行者";
+  if(s>=7) return "⛰️ 连续 7 天 · 登山者";
+  if(s>=3) return "🌱 连续 3 天 · 小树苗";
+  if(s>=1) return "✨ 已签到，继续保持";
+  return "签到后解锁今日壁纸下载";
+}
+var now=new Date();
+var dayOfYear=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000);
+var dailyIdx=dayOfYear % WALLS.length;
+var curIdx=dailyIdx;
+var bg=document.getElementById("bg");
+function showWall(i){
+  curIdx=i;
+  var w=WALLS[i];
+  var img=new Image();
+  img.onload=function(){bg.style.backgroundImage="url('"+w.u+"')"};
+  img.onerror=function(){bg.style.background="linear-gradient(160deg,#a8c8d8,#e8e0d0)"};
+  img.src=w.u;
+  document.getElementById("stTheme").textContent=w.t+" · 第 "+(i+1)+" / "+WALLS.length+" 张";
+  document.getElementById("credit").textContent="今日壁纸："+w.t+"（Unsplash 免费图库）";
+  refresh(false);
+}
+function refresh(updateTitle){
+  var days=load(); var today=todayStr(now); var checked=days.indexOf(today)>=0;
+  var s=streakOf(days);
+  document.getElementById("stStreak").textContent=s;
+  document.getElementById("stTotal").textContent=days.length;
+  document.getElementById("badge").textContent=badgeFor(s);
+  document.getElementById("checkTitle").textContent=checked?"今日已签到":"签到";
+  document.getElementById("btnCheck").textContent=checked?"今日已签到 ✓":"今日签到";
+  document.getElementById("btnCheck").disabled=checked;
+  document.getElementById("btnDownload").style.display=checked?"inline-block":"none";
+  document.getElementById("btnDownload").href=WALLS[dailyIdx].u;
+  if(updateTitle!==false) document.getElementById("checkMsg").textContent=checked?"签到成功，今日壁纸已解锁下载。":"";
+}
+var wd=["Sun.","Mon.","Tue.","Wed.","Thu.","Fri.","Sat."];
+document.getElementById("checkDate").textContent=(now.getMonth()+1)+"/"+now.getDate()+" "+wd[now.getDay()];
+document.getElementById("btnCheck").addEventListener("click",function(){
+  var days=load(); var today=todayStr(now);
+  if(days.indexOf(today)<0){days.push(today); days.sort(); save(days);}
+  refresh(true);
+});
+document.getElementById("btnNext").addEventListener("click",function(){showWall((curIdx+1)%WALLS.length)});
+showWall(dailyIdx);
+</script>
+</body>
+</html>
