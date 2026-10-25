@@ -397,6 +397,12 @@
   body.wallpaper-bg main{background:transparent}
   body.wallpaper-bg .panel,body.wallpaper-bg .hero,body.wallpaper-bg .subj,body.wallpaper-bg .stat,body.wallpaper-bg .topic-card{background:rgba(255,255,255,.70);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:20px}
   body.wallpaper-bg .hero{padding:18px 20px;margin-bottom:14px}
+
+  #homeGate{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:20px;background-size:cover;background-position:center}
+  #homeGate:before{content:"";position:absolute;inset:0;background:rgba(0,0,0,.22)}
+  #homeGate .gate-card{position:relative;background:rgba(255,255,255,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#222;border-radius:22px;padding:28px 26px;text-align:center;box-shadow:0 16px 50px rgba(0,0,0,.3);max-width:360px;width:100%}
+  #homeGate .gate-card h2{margin:10px 0 4px;font-size:20px}
+  #homeGate .gate-card p{margin:0;color:#666;font-size:14px;line-height:1.6}
 </style>
 </head>
 <body>
@@ -706,6 +712,7 @@
   <footer class="foot">高中刷题库 · 联网版 —— 题目从线上拉取，打开即最新；做题记录保存在本机浏览器中。</footer>
 </main>
 
+<div id="homeGate"><div class="gate-card"><div style="font-size:30px">📅</div><h2>今日打卡</h2><p id="gateDate"></p><p id="gateStreak" style="margin-top:8px"></p><div style="margin-top:18px"><button class="btn primary" id="btnGateCheck" type="button" style="padding:12px 28px;font-size:17px">今日签到</button></div><div style="margin-top:12px"><button class="btn" id="btnGateSkip" type="button" style="background:transparent;color:#666">今天先不签，直接进入</button></div></div></div>
 <nav class="bottombar" id="tabsBottom" aria-label="主导航"></nav>
 <div class="toast" id="toast"></div>
 
@@ -871,7 +878,7 @@
   }
   function go(view, arg){
     currentView = view;
-    if(view!=="home"){document.body.classList.remove("wallpaper-bg");document.body.style.backgroundImage="";}
+    if(view!=="home"){document.body.classList.remove("wallpaper-bg");document.body.style.backgroundImage="";var _g=document.getElementById("homeGate"); if(_g) _g.style.display="none";}
     var views = document.querySelectorAll(".view");
     for (var i=0;i<views.length;i++) views[i].classList.remove("on");
     document.getElementById("view-"+view).classList.add("on");
@@ -918,6 +925,7 @@
   }
 
   /* ---------------- 首页 ---------------- */
+  var gateSkipped=false;
   var WALLPAPER_LIST=[
     {u:"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80",t:"山野"},
     {u:"https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=80",t:"森林"},
@@ -945,6 +953,11 @@
     var days=checkinDays(); var n=new Date(); var t=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0"); var checked=days.indexOf(t)>=0; var s=checkinStreak(days);
     var txt=document.getElementById("homeCheckinText"); if(txt) txt.textContent=(n.getMonth()+1)+"/"+n.getDate()+" · 今日壁纸："+w.t+" · 连续 "+s+" 天 · 累计 "+days.length+" 天";
     var b1=document.getElementById("btnHomeCheck"); if(b1){ if(!b1.dataset.bound){b1.dataset.bound="1";b1.addEventListener("click",doCheckin);} b1.textContent=checked?"今日已打卡 ✓":"今日签到"; b1.disabled=checked; }
+    var gate=document.getElementById("homeGate"); if(gate){ if(!gate.dataset.bound){gate.dataset.bound="1";document.getElementById("btnGateCheck").addEventListener("click",function(){doCheckin();});document.getElementById("btnGateSkip").addEventListener("click",function(){gateSkipped=true;gate.style.display="none";});}
+      gate.style.backgroundImage="url('"+w.u+"')";
+      var gd=document.getElementById("gateDate"); if(gd) gd.textContent=(n.getMonth()+1)+"/"+n.getDate()+" · 今日壁纸："+w.t;
+      var gs=document.getElementById("gateStreak"); if(gs) gs.textContent=checked?("今日已打卡，连续 "+s+" 天"):"连续 "+s+" 天 · 签到后进入主页";
+      gate.style.display=(checked||gateSkipped)?"none":"flex"; }
   }
   function renderHome(){
     renderHomeCheckin();
