@@ -392,6 +392,10 @@
   #homeWallpaperBar .wb-text b{display:block;font-size:15px}
   #homeWallpaperBar .wb-text span{font-size:12.5px;opacity:.92}
   @media (min-width:860px){ #homeWallpaperBar{left:auto;right:20px;bottom:20px;width:380px} }
+
+  body.wallpaper-bg{background-size:cover;background-position:center;background-attachment:fixed;background-repeat:no-repeat}
+  body.wallpaper-bg main{background:transparent}
+  body.wallpaper-bg .panel,body.wallpaper-bg .hero,body.wallpaper-bg .subj,body.wallpaper-bg .stat,body.wallpaper-bg .topic-card{background:rgba(255,255,255,.86);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 </style>
 </head>
 <body>
@@ -701,7 +705,6 @@
   <footer class="foot">高中刷题库 · 联网版 —— 题目从线上拉取，打开即最新；做题记录保存在本机浏览器中。</footer>
 </main>
 
-<div id="homeWallpaperBar" style="display:none"><div class="wb-text"><b id="wbTitle">今日壁纸</b><span id="wbSub">自然风光 · 签到后解锁下载</span></div><button class="btn primary" id="btnBarCheck" type="button">签到</button><a class="btn" href="wallpaper.html" style="text-decoration:none;background:rgba(255,255,255,.9);color:#222">壁纸页</a></div>
 <nav class="bottombar" id="tabsBottom" aria-label="主导航"></nav>
 <div class="toast" id="toast"></div>
 
@@ -867,7 +870,7 @@
   }
   function go(view, arg){
     currentView = view;
-    var _bar=document.getElementById("homeWallpaperBar"); if(_bar) _bar.style.display=(view==="home")?"flex":"none";
+    if(view!=="home"){document.body.classList.remove("wallpaper-bg");document.body.style.backgroundImage="";}
     var views = document.querySelectorAll(".view");
     for (var i=0;i<views.length;i++) views[i].classList.remove("on");
     document.getElementById("view-"+view).classList.add("on");
@@ -935,15 +938,12 @@
   function checkinStreak(days){if(!days.length)return 0;var set={};days.forEach(function(d){set[d]=1});function ds(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}var cur=new Date();var s=0;if(!set[ds(cur)])cur.setDate(cur.getDate()-1);while(set[ds(cur)]){s++;cur.setDate(cur.getDate()-1)}return s}
   function doCheckin(){var days=checkinDays();var n=new Date();var t=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0");if(days.indexOf(t)<0){days.push(t);days.sort();try{localStorage.setItem("daily_wallpaper_checkin_v1",JSON.stringify(days))}catch(e){}}renderHomeCheckin();showToast("今日打卡成功，连续 "+checkinStreak(days)+" 天");}
   function renderHomeCheckin(){
-    var bar=document.getElementById("homeWallpaperBar"); if(!bar) return;
-    if(!bar.dataset.bound){bar.dataset.bound="1";document.getElementById("btnHomeCheck").addEventListener("click",doCheckin);document.getElementById("btnBarCheck").addEventListener("click",doCheckin);}
-    var w=wallpaperToday(); bar.style.backgroundImage="url('"+w.u+"')"; bar.style.display="flex";
+    var w=wallpaperToday();
+    document.body.classList.add("wallpaper-bg");
+    document.body.style.backgroundImage="url('"+w.u+"')";
     var days=checkinDays(); var n=new Date(); var t=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0"); var checked=days.indexOf(t)>=0; var s=checkinStreak(days);
-    document.getElementById("wbTitle").textContent="今日壁纸 · "+w.t;
-    document.getElementById("wbSub").textContent=checked?("已签到，连续 "+s+" 天 · 点壁纸页可下载"):"签到后解锁今日壁纸下载";
-    document.getElementById("homeCheckinText").textContent=(n.getMonth()+1)+"/"+n.getDate()+" · 连续 "+s+" 天 · 累计 "+days.length+" 天";
-    var b1=document.getElementById("btnHomeCheck"); b1.textContent=checked?"今日已打卡 ✓":"今日签到"; b1.disabled=checked;
-    var b2=document.getElementById("btnBarCheck"); b2.textContent=checked?"已打卡 ✓":"签到"; b2.disabled=checked;
+    var txt=document.getElementById("homeCheckinText"); if(txt) txt.textContent=(n.getMonth()+1)+"/"+n.getDate()+" · 今日壁纸："+w.t+" · 连续 "+s+" 天 · 累计 "+days.length+" 天";
+    var b1=document.getElementById("btnHomeCheck"); if(b1){ if(!b1.dataset.bound){b1.dataset.bound="1";b1.addEventListener("click",doCheckin);} b1.textContent=checked?"今日已打卡 ✓":"今日签到"; b1.disabled=checked; }
   }
   function renderHome(){
     renderHomeCheckin();
