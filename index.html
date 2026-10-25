@@ -945,7 +945,15 @@
   function wallpaperToday(){var n=new Date();var doy=Math.floor((n-new Date(n.getFullYear(),0,0))/86400000);return WALLPAPER_LIST[doy % WALLPAPER_LIST.length];}
   function checkinDays(){try{var v=JSON.parse(localStorage.getItem("daily_wallpaper_checkin_v1")||"[]");return Array.isArray(v)?v:[]}catch(e){return[]}}
   function checkinStreak(days){if(!days.length)return 0;var set={};days.forEach(function(d){set[d]=1});function ds(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}var cur=new Date();var s=0;if(!set[ds(cur)])cur.setDate(cur.getDate()-1);while(set[ds(cur)]){s++;cur.setDate(cur.getDate()-1)}return s}
-  function doCheckin(){var days=checkinDays();var n=new Date();var t=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0");if(days.indexOf(t)<0){days.push(t);days.sort();try{localStorage.setItem("daily_wallpaper_checkin_v1",JSON.stringify(days))}catch(e){}}renderHomeCheckin();showToast("今日打卡成功，连续 "+checkinStreak(days)+" 天");}
+  function showCheckinSuccess(){
+    var ov=document.getElementById("checkinSuccess"); if(!ov) return;
+    var days=checkinDays(); var el=document.getElementById("csStreak"); if(el) el.textContent="连续 "+checkinStreak(days)+" 天";
+    var lu=document.getElementById("csLulu"); if(lu) lu.style.display="none";
+    ov.style.display="flex";
+    setTimeout(function(){ if(lu) lu.style.display="block"; },900);
+    setTimeout(function(){ ov.style.display="none"; var gate=document.getElementById("homeGate"); if(gate) gate.style.display="none"; },2900);
+  }
+  function doCheckin(){var days=checkinDays();var n=new Date();var t=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0");if(days.indexOf(t)<0){days.push(t);days.sort();try{localStorage.setItem("daily_wallpaper_checkin_v1",JSON.stringify(days))}catch(e){}}renderHomeCheckin();showCheckinSuccess();}
   function renderHomeCheckin(){
     var w=wallpaperToday();
     document.body.classList.add("wallpaper-bg");
