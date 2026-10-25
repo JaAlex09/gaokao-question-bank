@@ -13138,7 +13138,7 @@
       "explanation": "图中骨架为CH3—CH2—OH，即乙醇。步骤：1）认出碳链末端连着—O—H；2）—OH连在烃基碳上属于羟基；3）羧基是—COOH、醛基是—CHO、酯基是—COO—，均与图不符。故选羟基。",
       "difficulty": 1,
       "source": "generated practice",
-      "image_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 400 300\"><line x1=\"120\" y1=\"150\" x2=\"190\" y2=\"150\" stroke=\"black\" stroke-width=\"2\"/><line x1=\"190\" y1=\"150\" x2=\"260\" y2=\"150\" stroke=\"black\" stroke-width=\"2\"/><line x1=\"260\" y1=\"150\" x2=\"310\" y2=\"150\" stroke=\"black\" stroke-width=\"2\"/><text x=\"90\" y=\"156\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">CH3</text><text x=\"190\" y=\"140\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">CH2</text><text x=\"260\" y=\"140\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">O</text><text x=\"330\" y=\"156\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">H</text></svg>",
+      "image_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 400 300\"><line x1=\"118\" y1=\"150\" x2=\"168\" y2=\"150\" stroke=\"black\" stroke-width=\"2\"/><line x1=\"212\" y1=\"150\" x2=\"248\" y2=\"150\" stroke=\"black\" stroke-width=\"2\"/><line x1=\"272\" y1=\"150\" x2=\"318\" y2=\"150\" stroke=\"black\" stroke-width=\"2\"/><text x=\"90\" y=\"156\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">CH3</text><text x=\"190\" y=\"156\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">CH2</text><text x=\"260\" y=\"156\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">O</text><text x=\"330\" y=\"156\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">H</text></svg>",
       "image_alt": "乙醇结构骨架图：CH3—CH2—O—H依次相连"
     },
     {
@@ -13274,7 +13274,7 @@
       "explanation": "步骤：1）C＝O键本身是极性键；2）但CO2为直线形对称结构，两个C＝O键的极性大小相等、方向相反；3）键的极性相互抵消，分子正负电荷中心重合，因此CO2是非极性分子。题干说法错误，故选错误。",
       "difficulty": 2,
       "source": "generated practice",
-      "image_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 400 300\"><line x1=\"130\" y1=\"150\" x2=\"200\" y2=\"150\" stroke=\"black\" stroke-width=\"3\"/><line x1=\"200\" y1=\"150\" x2=\"270\" y2=\"150\" stroke=\"black\" stroke-width=\"3\"/><text x=\"100\" y=\"156\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">O</text><text x=\"200\" y=\"140\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">C</text><text x=\"300\" y=\"156\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">O</text><text x=\"200\" y=\"200\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">直线形 O＝C＝O</text></svg>",
+      "image_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 400 300\"><line x1=\"118\" y1=\"150\" x2=\"182\" y2=\"150\" stroke=\"black\" stroke-width=\"3\"/><line x1=\"218\" y1=\"150\" x2=\"282\" y2=\"150\" stroke=\"black\" stroke-width=\"3\"/><text x=\"100\" y=\"156\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">O</text><text x=\"200\" y=\"156\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">C</text><text x=\"300\" y=\"156\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">O</text><text x=\"200\" y=\"200\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">直线形 O＝C＝O</text></svg>",
       "image_alt": "CO2分子示意图：O、C、O在一条直线上"
     },
     {
@@ -13346,7 +13346,7 @@
       "explanation": "步骤：1）图中骨架为CH3—C(＝O)—OH，即乙酸；2）—COOH由羰基和羟基组合而成，作为一个整体称为羧基；3）单独的羟基是—OH（乙醇），醛基是—CHO，酯基是—COO—，均不符合。故选羧基。",
       "difficulty": 3,
       "source": "generated practice",
-      "image_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 400 300\"><line x1=\"120\" y1=\"150\" x2=\"190\" y2=\"150\" stroke=\"black\" stroke-width=\"2\"/><line x1=\"190\" y1=\"150\" x2=\"260\" y2=\"150\" stroke=\"black\" stroke-width=\"2\"/><line x1=\"260\" y1=\"150\" x2=\"310\" y2=\"150\" stroke=\"black\" stroke-width=\"2\"/><line x1=\"210\" y1=\"150\" x2=\"240\" y2=\"110\" stroke=\"black\" stroke-width=\"2\"/><text x=\"90\" y=\"156\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">CH3</text><text x=\"190\" y=\"140\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">C</text><text x=\"260\" y=\"100\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">O</text><text x=\"280\" y=\"140\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">O</text><text x=\"330\" y=\"156\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">H</text></svg>",
+      "image_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 400 300\"><line x1=\"118\" y1=\"150\" x2=\"168\" y2=\"150\" stroke=\"black\" stroke-width=\"2\"/><line x1=\"212\" y1=\"150\" x2=\"262\" y2=\"150\" stroke=\"black\" stroke-width=\"2\"/><line x1=\"298\" y1=\"150\" x2=\"318\" y2=\"150\" stroke=\"black\" stroke-width=\"2\"/><line x1=\"205\" y1=\"140\" x2=\"235\" y2=\"112\" stroke=\"black\" stroke-width=\"2\"/><text x=\"90\" y=\"156\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">CH3</text><text x=\"190\" y=\"156\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">C</text><text x=\"250\" y=\"100\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">O</text><text x=\"280\" y=\"156\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">O</text><text x=\"330\" y=\"156\" font-size=\"16\" fill=\"black\" text-anchor=\"middle\">H</text></svg>",
       "image_alt": "乙酸结构骨架图：CH3—C(＝O)—OH"
     },
     {
